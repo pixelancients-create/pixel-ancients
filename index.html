@@ -368,7 +368,8 @@
 
   /* ---------- landing ---------- */
   .home-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; align-items: center; }
-  .home-hero h1 { max-width: none; font-size: clamp(48px, 7vw, 96px); }
+  .home-hero > div:first-child { container-type: inline-size; }
+  .home-hero h1 { max-width: none; font-size: clamp(40px, 16cqi, 88px); overflow-wrap: normal; }   /* sized to its column so ANCIENTS never splits */
   .home-hero .tagline { max-width: 26ch; }
   .home-hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
   .home-hero .ctas .btn { padding: 11px 18px; text-decoration: none; display: inline-flex; align-items: center; }
