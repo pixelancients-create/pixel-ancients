@@ -203,6 +203,7 @@
   .item.locked .iname::before { content: '🔒 '; }
   .item .iname { font-weight: 700; }
   .item .ireq { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .item .ireq .tick { color: var(--radiant); font-weight: 700; margin-right: 1px; }
   .bar { height: 4px; background: rgba(255,255,255,.08); margin-top: 8px; }
   .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), var(--ember)); }
   .look h3 { margin: 4px 0 10px; font-size: 16px; }
@@ -1642,7 +1643,7 @@
           ${it.id === 'none' ? '<span class="slot-ic big empty"></span>' : iconTile(slot.id, it, draft, 'big')}
           <div class="rar">${r.name}</div>
           <div class="iname">${esc(it.name)}</div>
-          <div class="ireq">${open ? (it.free ? 'Starter item' : 'Unlocked') : `${esc(A.requirement(it))} · ${bigNum(Math.min(v, it.need))}/${bigNum(it.need)}`}</div>
+          <div class="ireq">${open ? (it.free ? 'Starter item' : `<span class="tick" role="img" aria-label="Unlocked:">✓</span> ${esc(A.requirement(it))}`) : `${esc(A.requirement(it))} · ${bigNum(Math.min(v, it.need))}/${bigNum(it.need)}`}</div>
           ${guildsOn && it.id !== 'none' ? `<div class="ibattle"><b>In battle:</b> ${esc([B.slotStatText(slot.id, it.rarity), B.itemBattleText(it.id)].filter(Boolean).join('. ') || 'Base stats')}</div>` : ''}
           ${open ? '' : `<div class="bar"><i style="width:${Math.round(A.progress(it, st) * 100)}%"></i></div>`}
         </button>`; }).join('')}</div>`;
