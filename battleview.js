@@ -1,4 +1,77 @@
 /*
+ * Pixel Ancients battle sounds: 8-bit effects synthesised with the Web Audio API (no audio files).
+ * PixelSFX.play(name), .setVolume(0..1), .setMuted(bool). Sound only starts after a click (browser rule).
+ */
+(function (root) {
+  let ctx = null, master = null, noiseBuf = null, volume = 0.6, muted = false, lastAt = {};
+  function ensure() {
+    if (!ctx) {
+      const AC = root.AudioContext || root.webkitAudioContext; if (!AC) return null;
+      ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : volume;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+      master.connect(comp); comp.connect(ctx.destination);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0); let hold = 0, v = 0;
+      for (let i = 0; i < d.length; i++) { if (hold-- <= 0) { v = Math.random() * 2 - 1; hold = 3; } d[i] = v; }   // chunky 8-bit noise
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  // square/triangle tone with a pitch slide and a quick decay
+  function tone(t, { f0, f1 = f0, dur, type = 'square', gain = 0.25, attack = 0.004, vib = 0, delay = 0 }) {
+    const o = ctx.createOscillator(), g = ctx.createGain(), s = t + delay;
+    o.type = type; o.frequency.setValueAtTime(f0, s);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), s + dur);
+    if (vib) { const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = vib; lg.gain.value = f0 * 0.12; l.connect(lg); lg.connect(o.frequency); l.start(s); l.stop(s + dur); }
+    g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(gain, s + attack); g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+    o.connect(g); g.connect(master); o.start(s); o.stop(s + dur + 0.02);
+  }
+  function noise(t, { dur, gain = 0.25, filter = 'lowpass', f0 = 3000, f1 = f0, q = 0.7, delay = 0 }) {
+    const n = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), s = t + delay;
+    n.buffer = noiseBuf; fl.type = filter; fl.Q.value = q; fl.frequency.setValueAtTime(f0, s);
+    if (f1 !== f0) fl.frequency.exponentialRampToValueAtTime(f1, s + dur);
+    g.gain.setValueAtTime(gain, s); g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+    n.connect(fl); fl.connect(g); g.connect(master); n.start(s); n.stop(s + dur + 0.02);
+  }
+  const notes = (t, list, step, opts) => list.forEach((f, i) => tone(t, { f0: f, dur: step * 1.1, delay: i * step, ...opts }));
+
+  const SOUNDS = {
+    hit:     t => { noise(t, { dur: 0.07, gain: 0.32, f0: 2200, f1: 500 }); tone(t, { f0: 300, f1: 110, dur: 0.08, gain: 0.18 }); },
+    shot:    t => { tone(t, { f0: 1500, f1: 380, dur: 0.11, gain: 0.16 }); noise(t, { dur: 0.04, gain: 0.08, filter: 'highpass', f0: 3000 }); },
+    cast:    t => { notes(t, [660, 880, 1320, 1760], 0.045, { type: 'square', gain: 0.1 }); tone(t, { f0: 2640, dur: 0.22, type: 'triangle', gain: 0.06, delay: 0.16, vib: 18 }); },
+    crit:    t => { tone(t, { f0: 180, f1: 45, dur: 0.24, type: 'sine', gain: 0.5 }); noise(t, { dur: 0.16, gain: 0.35, f0: 4000, f1: 300 }); tone(t, { f0: 1760, dur: 0.09, gain: 0.12, delay: 0.03 }); tone(t, { f0: 2349, dur: 0.12, gain: 0.08, delay: 0.08 }); },
+    miss:    t => noise(t, { dur: 0.14, gain: 0.42, filter: 'bandpass', f0: 600, f1: 3200, q: 1.2 }),
+    block:   t => { tone(t, { f0: 1850, dur: 0.12, gain: 0.12 }); tone(t, { f0: 2470, dur: 0.16, gain: 0.08, delay: 0.01 }); noise(t, { dur: 0.03, gain: 0.12, filter: 'highpass', f0: 5000 }); },
+    heal:    t => { notes(t, [880, 1175, 1568], 0.07, { type: 'triangle', gain: 0.16 }); },
+    stun:    t => tone(t, { f0: 420, f1: 300, dur: 0.34, gain: 0.12, vib: 22 }),
+    pet:     t => tone(t, { f0: 1200, f1: 1900, dur: 0.06, gain: 0.13 }),
+    rune:    t => notes(t, [523, 659, 784, 1046, 1318, 1568], 0.035, { gain: 0.1 }),
+    ko:      t => { tone(t, { f0: 620, f1: 70, dur: 0.38, gain: 0.18 }); noise(t, { dur: 0.1, gain: 0.18, f0: 900, f1: 200, delay: 0.3 }); },
+    revive:  t => { notes(t, [392, 523, 659, 784], 0.065, { type: 'square', gain: 0.12 }); tone(t, { f0: 1046, dur: 0.3, type: 'triangle', gain: 0.12, delay: 0.26, vib: 8 }); },
+    big:     t => { tone(t, { f0: 130, f1: 32, dur: 0.6, type: 'sine', gain: 0.6 }); noise(t, { dur: 0.5, gain: 0.4, f0: 2500, f1: 120 }); tone(t, { f0: 90, f1: 40, dur: 0.35, gain: 0.15, delay: 0.02 }); },
+    victory: t => { notes(t, [523, 659, 784], 0.11, { gain: 0.14 }); tone(t, { f0: 1046, dur: 0.7, gain: 0.14, delay: 0.33, vib: 6 }); tone(t, { f0: 523, dur: 0.7, type: 'triangle', gain: 0.18, delay: 0.33 }); },
+  };
+  const GAP = { hit: 0.05, shot: 0.05, pet: 0.06, miss: 0.08, block: 0.08 };   // thins out repeats at high speed
+
+  root.PixelSFX = {
+    names: Object.keys(SOUNDS),
+    play(name, speed = 1) {
+      if (muted || !SOUNDS[name] || !ensure()) return;
+      if (ctx.state !== 'running') return;   // not unlocked yet: skip rather than queue (avoids a burst on the first tap)
+      const now = ctx.currentTime, gap = (GAP[name] || 0.03) * Math.max(1, speed);
+      if (lastAt[name] && now - lastAt[name] < gap) return;
+      lastAt[name] = now; SOUNDS[name](now + 0.005);
+    },
+    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (master) master.gain.value = muted ? 0 : volume; },
+    setMuted(m) { muted = !!m; if (master) master.gain.value = muted ? 0 : volume; },
+    get muted() { return muted; }, get volume() { return volume; },
+    unlock() { ensure(); },
+    _render(name, AC) {   // test hook: renders one sound into an OfflineAudioContext
+      const saved = [ctx, master, noiseBuf]; ctx = AC; master = AC.createGain(); master.connect(AC.destination); noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; SOUNDS[name](0.01); [ctx, master, noiseBuf] = saved; },
+  };
+})(typeof window !== 'undefined' ? window : this);
+
+/*
  * Battle replay arena: plays a LeagueBattle.simulate() result on a pixel canvas,
  * with playback controls and a GIF clip of the finish. Browser only.
  */
@@ -30,8 +103,33 @@
     return { result, units, steps, floaters: [], shots: [], shouts: [], applied: 0, ended: false, flash: 0 };
   }
 
+  // which sound each replay event makes
+  function soundOf(sc, e) {
+    const U = k => sc.units[k];
+    if (e.k === 'cast') return e.a === 'wombo' || e.a === 'stomp' || e.a === 'waveClear' ? 'big' : 'cast';
+    if (e.k === 'hit') { if (e.miss) return 'miss'; if (!e.d || e.block) return 'block'; if (e.crit) return 'crit'; const s = U(e.s); return s && s.type !== 'melee' ? 'shot' : 'hit'; }
+    if (e.k === 'pet') return e.miss ? null : 'pet';
+    if (e.k === 'heal') { const t = U(e.t); return t && e.v >= t.maxHp * 0.2 ? 'heal' : null; }   // regen / lifesteal ticks stay quiet
+    return { die: 'ko', revive: 'revive', save: 'revive', stun: 'stun', rune: 'rune', end: 'victory' }[e.k] || null;
+  }
+  // one step can hold many events: keep every special sound once, but only the strongest attack sound
+  const ATTACK = ['crit', 'hit', 'shot', 'block', 'miss', 'pet'];
+  function stepSounds(sc, evs) {
+    const out = new Set(); let atk = null;
+    const healCast = evs.some(e => e.k === 'cast' && (e.a === 'heal' || e.a === 'healAll'));
+    for (const e of evs) {
+      const snd = e.k === 'heal' && healCast ? 'heal' : soundOf(sc, e);
+      if (!snd) continue;
+      if (ATTACK.includes(snd)) { if (atk == null || ATTACK.indexOf(snd) < ATTACK.indexOf(atk)) atk = snd; }
+      else out.add(snd);
+    }
+    if (atk) out.add(atk);
+    return [...out];
+  }
+
   function applyStep(sc, i, now) {
     const evs = sc.steps[i] || [];
+    if (sc.sfx) stepSounds(sc, evs).forEach(n => sc.sfx(n));
     for (const e of evs) {
       const U = k => sc.units[k];
       if (e.k === 'act') { const u = U(e.u); u.anim = 'b_attack'; u.animT0 = now; if (u.type !== 'melee') u.anim = 'b_shoot'; u.lunge = u.type === 'melee' ? now : 0; }
@@ -170,13 +268,26 @@
         <button class="btn" data-a="skip">Skip to end</button>
         <button class="btn" data-a="restart">Replay</button>
         ${opts.gif === false ? '' : '<button class="btn" data-a="gif">Download GIF clip</button>'}
+        ${root.PixelSFX ? '<button class="btn" data-a="sound" aria-pressed="false"></button><input class="arena-vol" type="range" min="0" max="100" aria-label="Sound volume" style="width:84px;accent-color:#e8553e;vertical-align:middle;margin-left:-2px">' : ''}
         <span class="arena-msg" role="status"></span>
       </div>`;
     const cv = el.querySelector('canvas'), ctx = cv.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     let sc = makeScene(result), t = 0, speed = 1, playing = opts.autoplay !== false, lastFrame = 0, raf = 0, dead = false;
+    // ---- sound: on by default, mute + volume remembered on this device ----
+    const SFX = root.PixelSFX, keep = { get(k, d) { try { const v = localStorage.getItem('pa:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('pa:' + k, JSON.stringify(v)); } catch {} } };
+    const sndBtn = el.querySelector('[data-a="sound"]'), volIn = el.querySelector('.arena-vol');
+    const syncSound = () => { if (!SFX) return; sndBtn.textContent = SFX.muted ? '🔇 Sound off' : '🔊 Sound on'; sndBtn.setAttribute('aria-pressed', String(!SFX.muted)); volIn.value = Math.round(SFX.volume * 100); };
+    if (SFX) { SFX.setMuted(keep.get('sfxMuted', false)); SFX.setVolume(keep.get('sfxVol', 0.6)); syncSound(); }
+    const live = s => { if (SFX) s.sfx = name => { if (playing) SFX.play(name, speed); }; return s; };
+    sc = live(sc);
+    if (SFX) {
+      const unlock = () => { SFX.unlock(); document.removeEventListener('pointerdown', unlock, true); document.removeEventListener('keydown', unlock, true); };
+      document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);   // browsers allow sound after the first tap or key press
+      volIn.oninput = () => { SFX.setVolume(volIn.value / 100); keep.set('sfxVol', SFX.volume); if (SFX.muted && +volIn.value > 0) { SFX.setMuted(false); keep.set('sfxMuted', false); } syncSound(); };
+    }
     const reduce = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { advance(sc, Infinity); t = sc.steps.length * STEP + 2000; playing = false; }
+    if (reduce) { const f = sc.sfx; sc.sfx = null; advance(sc, Infinity); sc.sfx = f; t = sc.steps.length * STEP + 2000; playing = false; }
     const loop = ts => {
       if (dead || !el.isConnected) { dead = true; return; }
       const dt = lastFrame ? Math.min(100, ts - lastFrame) : 0; lastFrame = ts;
@@ -192,8 +303,9 @@
       const act = a.dataset.a;
       if (act === 'play') { if (!sc.ended) playing = !playing; setBtn(); }
       if (act === 'speed') { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; a.textContent = `Speed ${speed}x`; }
-      if (act === 'skip') { t = sc.steps.length * STEP + 600; advance(sc, t); sc.floaters = []; sc.shots = []; sc.shouts = []; }
-      if (act === 'restart') { sc = makeScene(result); t = 0; playing = true; setBtn(); }
+      if (act === 'skip') { const f = sc.sfx; sc.sfx = null; t = sc.steps.length * STEP + 600; advance(sc, t); sc.sfx = f; sc.floaters = []; sc.shots = []; sc.shouts = []; }
+      if (act === 'restart') { sc = live(makeScene(result)); t = 0; playing = true; setBtn(); }
+      if (act === 'sound' && SFX) { SFX.unlock(); SFX.setMuted(!SFX.muted); keep.set('sfxMuted', SFX.muted); syncSound(); if (!SFX.muted) SFX.play('pet'); }
       if (act === 'gif') {
         const msg = el.querySelector('.arena-msg'); msg.textContent = 'Making the clip…'; a.disabled = true;
         await new Promise(r => setTimeout(r, 30));
