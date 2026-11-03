@@ -1184,9 +1184,14 @@
         const X = x + dx, Y = y + dy; if (X >= 0 && X < SIZE && Y >= 0 && Y < SIZE) dst[Y][X] = v;
       }
     };
-    const up = ps.lift + ps.body, sx = ps.shiftX;
+    // jumps: tall hair or headgear would leave the top of the 32px frame, so jump lower just enough to keep the head
+    // (and its 1px outline) in frame; never by more than the jump itself, so the feet never sink below the ground
+    const topRow = gr => { for (let y = 0; y < SIZE; y++) if (gr[y].some(Boolean)) return y; return SIZE; };
+    const headTop = Math.min(topRow(L.head), topRow(L.hair)) + ps.lift + ps.body + ps.headY;
+    const lower = ps.lift < 0 ? Math.max(0, Math.min(1 - headTop, -ps.lift)) : 0;
+    const up = ps.lift + ps.body + lower, sx = ps.shiftX;
     blit(g, L.cape, sx, up, (x, y) => y < 25); blit(g, L.cape, sx + ps.cape, up, (x, y) => y >= 25);
-    blit(g, L.legs, sx, ps.lift + ps.legs);
+    blit(g, L.legs, sx, ps.lift + ps.legs + lower);
     blit(g, L.body, sx, up);
     blit(g, L.hair, sx + ps.hair, up + ps.headY);
     blit(g, L.head, sx + ps.headX, up + ps.headY);
