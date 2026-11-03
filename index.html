@@ -167,7 +167,7 @@
   }
   .slot-ic img { width: 84%; height: 84%; image-rendering: pixelated; }
   .slot-ic.big { width: 100%; height: auto; aspect-ratio: 1; margin-bottom: 10px; }
-  .slot-ic.empty { --rc: rgba(255,255,255,.14); background: #0b0d0e; border-style: dashed; }
+  .slot-ic.empty { --rc: rgba(255,255,255,.14); background: #0b0d0e; border-style: dashed; padding: 0; }   /* padding: 0 beats the generic .empty box, which made empty slots twice the size */
   .item.locked .slot-ic img { filter: grayscale(1) brightness(.35); }
   .slot-ic.r-unique { animation: uniqueGlow 1.8s ease-in-out infinite; }
   .item:has(.r-unique) { border-color: rgba(255, 59, 48, .45); }
