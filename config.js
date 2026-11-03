@@ -22,7 +22,7 @@ window.LEAGUE_CONFIG = {
 
   season: {
     name: 'Trial Season',
-    start: '2026-11-09',            // a Monday
+    start: '2026-11-02',            // a Monday
     weeks: 2,                       // regular weeks; a finals week follows
   },
 
