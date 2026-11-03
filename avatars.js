@@ -12,9 +12,15 @@
   const HAIR_STYLES = [
     { id: 'short', name: 'Short' }, { id: 'spiky', name: 'Spiky' },
     { id: 'long', name: 'Long' }, { id: 'mohawk', name: 'Mohawk' },
+    { id: 'bob', name: 'Bob' }, { id: 'ponytail', name: 'Ponytail' },
+    { id: 'twintails', name: 'Twin Tails' }, { id: 'buns', name: 'Space Buns' },
+    { id: 'topknot', name: 'Top Knot' }, { id: 'afro', name: 'Afro' },
+    { id: 'swept', name: 'Side Swept' }, { id: 'shaved', name: 'Shaved' },
   ];
-  const HAIR_COLORS = ['#2b2420', '#6b3f22', '#e3c169', '#b8432d', '#e8e4dc', '#4a6fd1'];
-  const TUNICS = ['#3d6ec9', '#4f9a3a', '#b63a2c', '#7a4bb3', '#2f9a92'];
+  const HAIR_COLORS = ['#2b2420', '#6b3f22', '#e3c169', '#b8432d', '#e8e4dc', '#4a6fd1',
+    '#e86fa6', '#8a5ad6', '#36b79a', '#e0782e', '#8d9196'];   // + pink, purple, mint, ginger, ash grey
+  const TUNICS = ['#3d6ec9', '#4f9a3a', '#b63a2c', '#7a4bb3', '#2f9a92',
+    '#e0689f', '#de7a2c', '#d9b13a', '#e4ddcc', '#34363b', '#7b5434'];   // + pink, orange, yellow, cream, charcoal, brown
 
   const RARITY = {
     starter:   { name: 'Starter',   color: '#8e8981' },
@@ -310,9 +316,10 @@
     const h = hash(id);
     const lo = {
       skin: h % SKINS.length,
-      hair: HAIR_STYLES[(h >>> 3) % HAIR_STYLES.length].id,
-      hairColor: (h >>> 6) % HAIR_COLORS.length,
-      tunic: (h >>> 9) % TUNICS.length,
+      // defaults pick from the original 4 styles / 6 hair colours / 5 tunics, so adding options never changes anyone's default look
+      hair: HAIR_STYLES[(h >>> 3) % 4].id,
+      hairColor: (h >>> 6) % 6,
+      tunic: (h >>> 9) % 5,
     };
     for (const slot of SLOTS) {
       const unlocked = slot.items.filter(i => isUnlocked(i, st));
@@ -1136,15 +1143,31 @@
       else { R(eL, 11, 1, 2, C.dark); R(eR, 11, 1, 2, C.dark); }
       if (facing) { P(20, 13, skinD); R(17, 14, 2, 1, skinD); R(10, 11, 1, 2, skin); P(10, 12, skinD); } else R(15, 14, 2, 1, skinD);   // facing: nose, mouth and the far ear
       if (!['tower_helm', 'rampage_helm', 'night_owl_hood', 'unbroken_helm', 'last_pick_hood'].includes(lo.head)) {
+        const h = pen(L.hair);                         // behind the head: long hair, tails
         if (lo.hair === 'mohawk') { R(15, 2, 2, 6, hairC); P(16, 2, hairD); R(11, 7, 1, 2, hairD); R(20, 7, 1, 2, hairD); }
+        else if (lo.hair === 'shaved') { R(12, 6, 8, 1, shade(skin, 0.86)); P(11, 7, shade(skin, 0.86)); P(20, 7, shade(skin, 0.86)); }
+        else if (lo.hair === 'afro') {
+          R(11, 2, 10, 6, hairC); R(10, 3, 1, 7, hairC); R(21, 3, 1, 7, hairD); R(9, 4, 1, 5, hairC); R(22, 4, 1, 5, hairD);
+          R(12, 1, 8, 1, hairC); [[13, 3], [16, 2], [18, 4], [11, 5], [20, 6], [14, 6], [9, 6], [17, 6]].forEach(([x, y]) => P(x, y, hairD));
+          R(11, 8, 1, 2, hairC); R(20, 8, 1, 2, hairD);
+        }
         else {
           R(11, 5, 10, 3, hairC); R(19, 5, 2, 3, hairD); P(11, 5, null); P(20, 5, null);
           R(11, 8, 1, 2, hairC); R(20, 8, 1, 2, hairD); R(12, 8, 3, 1, hairC); R(17, 8, 2, 1, hairC);
           if (lo.hair === 'spiky') [[12, 4], [13, 3], [15, 4], [16, 3], [18, 4], [19, 3]].forEach(([x, y]) => P(x, y, hairC));
           if (lo.hair === 'long') {
             R(10, 7, 2, 5, hairC); R(20, 7, 2, 5, hairD);
-            const h = pen(L.hair); h.R(10, 12, 2, 6, hairC); h.R(20, 12, 2, 6, hairD);
+            h.R(10, 12, 2, 6, hairC); h.R(20, 12, 2, 6, hairD);
           }
+          if (lo.hair === 'bob') { R(10, 6, 2, 6, hairC); R(20, 6, 2, 6, hairD); R(9, 9, 1, 4, hairC); R(22, 9, 1, 4, hairD); R(10, 12, 2, 1, hairC); R(20, 12, 2, 1, hairD); R(12, 8, 7, 1, hairC); P(19, 8, hairD); }
+          if (lo.hair === 'ponytail') { R(21, 5, 1, 3, hairD); P(22, 6, '#c23c2a'); P(22, 7, '#c23c2a'); h.R(22, 5, 2, 2, hairC); h.R(23, 7, 2, 7, hairC); h.R(24, 8, 1, 6, hairD); h.R(23, 14, 1, 2, hairD); }
+          if (lo.hair === 'twintails') {
+            R(9, 6, 2, 2, '#c23c2a'); R(21, 6, 2, 2, '#c23c2a');
+            h.R(8, 8, 2, 8, hairC); h.R(22, 8, 2, 8, hairD); h.P(8, 16, hairD); h.P(23, 16, hairD); h.R(9, 7, 2, 2, hairC); h.R(21, 7, 2, 2, hairD);
+          }
+          if (lo.hair === 'buns') { R(10, 2, 3, 3, hairC); R(19, 2, 3, 3, hairD); P(10, 2, null); P(21, 2, null); P(12, 4, hairD); P(19, 4, hairD); }
+          if (lo.hair === 'topknot') { R(14, 1, 4, 3, hairC); P(14, 1, null); P(17, 1, null); R(15, 4, 2, 1, '#c23c2a'); P(17, 3, hairD); }
+          if (lo.hair === 'swept') { R(12, 8, 6, 1, hairC); R(12, 9, 4, 1, hairC); R(12, 10, 2, 1, hairD); R(10, 6, 2, 5, hairC); P(17, 8, hairD); }
         }
       }
       item('head', L.head);
