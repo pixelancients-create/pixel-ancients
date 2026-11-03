@@ -33,9 +33,9 @@ window.LEAGUE_CONFIG = {
     // Gentler on parties, if stacks feel punished after the trial:  { 1: 12, 2: 12, 3: 11, 4: 10, 5: 9 }
     loss: 2,                        // every counted loss, any party size
     abandon: -5,
-    dailyCap: 6,                    // counted games per day
-    weeklyCap: 24,                  // counted games per week (the first 24 count)
-    minGames: 12,                   // counted games needed to place in a week's final top 3
+    dailyCap: 12,                    // counted games per day
+    weeklyCap: 48,                  // counted games per week (the first 24 count)
+    minGames: 24,                   // counted games needed to place in a week's final top 3
     kdaThreshold: 6,                // (kills + assists) / max(deaths, 1); counts toward gear, no points
     minDurationSeconds: { turbo: 600, allpick: 900 },   // shorter games are remakes
   },
