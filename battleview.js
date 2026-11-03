@@ -1,4 +1,164 @@
 /*
+ * Pixel Ancients battle music: three original 8-bit loops synthesised with the Web Audio API (no audio files).
+ * PixelMusic.play(id) / .playRandom() / .next() / .stop() / .setVolume(0..1) / .setMuted(bool) / .rotate = true|false
+ */
+(function (root) {
+  const NOTE = { C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5, 'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11 };
+  const midi = n => { const m = n.match(/^([A-G][#b]?)(\d)$/); return 12 * (+m[2] + 1) + NOTE[m[1]]; };
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  const CHORD = { m: [0, 3, 7], M: [0, 4, 7] };
+  const chord = c => { const m = c.match(/^([A-G][#b]?)(m?)$/); return { root: NOTE[m[1]], ivs: CHORD[m[2] ? 'm' : 'M'] }; };
+  // lead: one string per bar, 16 tokens (note, '.' = hold, '-' = rest)
+  const bars = s => s.split('|').map(b => b.trim().split(/\s+/));
+
+  const TRACKS = {
+    lane: {
+      title: 'Lane Clash', mood: 'Heroic and driving: the default fight theme', bpm: 150, bass: 'octave', drums: 'rock', lead: 0.25,
+      chords: 'Am Am F G Am Am F E F G Am Am F G E E'.split(' '),
+      melody: bars(`A4 . . C5 . E5 . . D5 . C5 . B4 . C5 . | A4 . . . E4 . G4 . A4 . . . - - - - |
+        F4 . A4 . C5 . . . B4 . A4 . G4 . . . | G4 . B4 . D5 . . . E5 . D5 . B4 . G4 . |
+        A4 . . C5 . E5 . . A5 . G5 . E5 . C5 . | D5 . . . C5 . B4 . C5 . . . - - - - |
+        F4 . A4 . C5 . F5 . E5 . . . D5 . C5 . | B4 . . . G#4 . . . E4 . . . - - - - |
+        C5 . . . A4 . C5 . D5 . . . B4 . D5 . | E5 . . . . . . . C5 . D5 . E5 . G5 . |
+        A5 . . . . . G5 . E5 . . . C5 . . . | A4 . C5 . E5 . A5 . G5 . E5 . C5 . . . |
+        F5 . . . E5 . D5 . C5 . . . B4 . A4 . | G4 . . . B4 . D5 . G5 . F5 . D5 . B4 . |
+        G#4 . . . B4 . . . E5 . . . G#5 . . . | B5 . . . . . . . - - - - E5 . G#5 .`),
+    },
+    roshan: {
+      title: 'Roshan Pit', mood: 'Dark and heavy: a slow, menacing grind', bpm: 128, bass: 'gallop', drums: 'heavy', lead: 0.22, vib: 7,
+      chords: 'Dm Dm Eb Dm Dm Dm Bb C Gm Gm Eb Eb Dm Dm A A'.split(' '),
+      melody: bars(`D5 . . . . . . . F5 . . . E5 . D5 . | Eb5 . . . . . . . D5 . . . - - - - |
+        Bb4 . . . G4 . . . Eb5 . . . D5 . . . | D5 . . . . . . . - - A4 . D5 . F5 . |
+        A5 . . . G5 . F5 . E5 . . . F5 . E5 . | D5 . . . . . . . - - - - - - - - |
+        F5 . . . D5 . Bb4 . C5 . . . E5 . G5 . | E5 . . . C5 . . . G4 . . . - - - - |
+        G5 . . . F5 . D5 . Bb4 . . . D5 . G5 . | A5 . . . G5 . F5 . D5 . . . - - - - |
+        Eb5 . . . G5 . Bb5 . G5 . . . Eb5 . . . | F5 . . . Eb5 . D5 . C5 . . . Bb4 . . . |
+        A4 . . . D5 . F5 . A5 . . . . . . . | G5 . F5 . E5 . D5 . F5 . . . - - - - |
+        C#5 . . . E5 . . . A5 . . . G5 . E5 . | C#5 . . . . . . . A4 . . . - - - -`),
+    },
+    highground: {
+      title: 'High Ground Rush', mood: 'Fast and frantic: a last-push sprint', bpm: 166, bass: 'fifths', drums: 'dance', lead: 0.22,
+      chords: 'Em C G D Em C G B C D Em Em C D G B'.split(' '),
+      melody: bars(`E5 . B4 . E5 . G5 . F#5 . E5 . D5 . B4 . | C5 . E5 . G5 . . . A5 . G5 . E5 . C5 . |
+        D5 . G5 . B5 . . . A5 . G5 . F#5 . D5 . | F#5 . . . E5 . D5 . A4 . . . D5 . F#5 . |
+        G5 . . . F#5 . E5 . B4 . E5 . G5 . B5 . | A5 . . . G5 . E5 . C5 . . . E5 . G5 . |
+        B5 . A5 . G5 . D5 . G5 . . . B4 . D5 . | D#5 . . . F#5 . . . B5 . . . A5 . F#5 . |
+        G5 . . . E5 . . . C5 . E5 . G5 . C6 . | A5 . . . F#5 . . . D5 . F#5 . A5 . D6 . |
+        B5 . . . . . . . G5 . A5 . B5 . E6 . | D6 . B5 . G5 . E5 . B4 . . . - - - - |
+        C6 . . . B5 . A5 . G5 . . . E5 . G5 . | A5 . . . G5 . F#5 . D5 . . . F#5 . A5 . |
+        G5 . . . B5 . D6 . . . . . B5 . G5 . | F#5 . . . D#5 . . . B4 . . . - - - -`),
+    },
+  };
+  const IDS = Object.keys(TRACKS);
+
+  // ---------- audio plumbing ----------
+  let ctx = null, out = null, volume = 0.45, muted = false, noiseBuf = null, waves = {};
+  function setup(c) {
+    const g = c.createGain(); g.gain.value = muted ? 0 : volume;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 9000;   // takes the fizz off the square waves
+    g.connect(lp); lp.connect(c.destination);
+    const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), d = nb.getChannelData(0); let hold = 0, v = 0;
+    for (let i = 0; i < d.length; i++) { if (hold-- <= 0) { v = Math.random() * 2 - 1; hold = 2; } d[i] = v; }
+    const pulse = duty => { const n = 64, re = new Float32Array(n), im = new Float32Array(n); for (let k = 1; k < n; k++) re[k] = (2 / (k * Math.PI)) * Math.sin(Math.PI * k * duty); return c.createPeriodicWave(re, im); };
+    return { out: g, noiseBuf: nb, waves: { p25: pulse(0.25), p125: pulse(0.125) } };
+  }
+  function ensure() {
+    if (!ctx) { const AC = root.AudioContext || root.webkitAudioContext; if (!AC) return null; ctx = new AC(); ({ out, noiseBuf, waves } = setup(ctx)); }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function osc(c, o, w, t, f, dur, gain, { vib = 0, slide = 0 } = {}) {
+    const n = c.createOscillator(), g = c.createGain();
+    if (w === 'tri' || w === 'sine') n.type = w === 'tri' ? 'triangle' : 'sine'; else n.setPeriodicWave(w);
+    n.frequency.setValueAtTime(f, t); if (slide) n.frequency.exponentialRampToValueAtTime(f * slide, t + dur);
+    if (vib && dur > 0.2) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = vib; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.012, t + Math.min(0.25, dur)); l.connect(lg); lg.connect(n.frequency); l.start(t); l.stop(t + dur + 0.05); }
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.006);
+    g.gain.setValueAtTime(gain, t + Math.max(0.01, dur - 0.04)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(g); g.connect(o); n.start(t); n.stop(t + dur + 0.02);
+  }
+  function nz(c, o, nb, t, dur, gain, type, f) {
+    const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = nb; fl.type = type; fl.frequency.value = f; g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(o); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+  }
+  const kick = (c, o, t, g = 0.55) => { const n = c.createOscillator(), a = c.createGain(); n.type = 'sine'; n.frequency.setValueAtTime(150, t); n.frequency.exponentialRampToValueAtTime(42, t + 0.14); a.gain.setValueAtTime(g, t); a.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); n.connect(a); a.connect(o); n.start(t); n.stop(t + 0.22); };
+
+  const DRUMS = {        // 16 steps: k = kick, s = snare, h = hat, o = open hat
+    rock:  'k.h.s.h.k.hkshoh',
+    heavy: 'k..kh.h.s..kh.hh',
+    dance: 'khhhkhshkhhhkhsh',
+  };
+  // schedule one 16th step of a track at time t (c = context, a = {out, noiseBuf, waves})
+  function step(c, a, tr, i, t) {
+    const sp = 60 / tr.bpm / 4, total = tr.chords.length * 16, s = i % total, bar = Math.floor(s / 16), pos = s % 16;
+    const ch = chord(tr.chords[bar]), o = a.out;
+    // lead
+    const tok = tr.melody[bar][pos];
+    if (tok && tok !== '.' && tok !== '-') {
+      let len = 1; for (let j = s + 1; j < total; j++) { const tk = tr.melody[Math.floor(j / 16)][j % 16]; if (tk === '.') len++; else break; }
+      osc(c, o, a.waves.p25, t, hz(midi(tok)), len * sp * 0.95, tr.lead * 0.5, { vib: tr.vib || 5.5 });
+      osc(c, o, a.waves.p125, t + sp * 0.75, hz(midi(tok)), len * sp * 0.9, tr.lead * 0.12);          // soft echo
+    }
+    // arpeggio (quiet, every 16th)
+    const arpNotes = [0, 1, 2, 1].map(k => 60 + ch.root + ch.ivs[k] + (ch.root > 4 ? -12 : 0) + 12);
+    osc(c, o, a.waves.p125, t, hz(arpNotes[pos % 4] + (pos >= 8 ? 12 : 0)), sp * 0.8, 0.045);
+    // bass
+    const r = 36 + ch.root + (ch.root > 6 ? -12 : 0) + 12;
+    if (tr.bass === 'octave' && pos % 2 === 0) osc(c, o, 'tri', t, hz(r + (pos % 4 === 2 ? 12 : 0)), sp * 1.8, 0.42);
+    if (tr.bass === 'gallop' && [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15].includes(pos)) osc(c, o, 'tri', t, hz(r - (pos % 4 === 0 ? 0 : 0)), sp * 0.9, 0.45);
+    if (tr.bass === 'fifths' && pos % 2 === 0) osc(c, o, 'tri', t, hz(r + (pos % 8 === 4 ? 7 : 0) + (pos === 14 ? 12 : 0)), sp * 1.7, 0.4);
+    // drums (+ a snare roll into every 4th bar)
+    const d = DRUMS[tr.drums][pos], fill = bar % 4 === 3 && pos >= 12;
+    if (d === 'k') kick(c, o, t, tr.drums === 'heavy' ? 0.65 : 0.55);
+    if (d === 's' || fill) nz(c, o, a.noiseBuf, t, 0.12, fill ? 0.12 + (pos - 12) * 0.04 : 0.22, 'bandpass', 1800);
+    if (d === 'h') nz(c, o, a.noiseBuf, t, 0.03, 0.07, 'highpass', 7000);
+    if (d === 'o') nz(c, o, a.noiseBuf, t, 0.14, 0.08, 'highpass', 6000);
+    if (s === 0) { nz(c, o, a.noiseBuf, t, 0.9, 0.12, 'highpass', 4000); }   // crash at the top of the loop
+  }
+
+  // ---------- live player (look-ahead scheduler) ----------
+  let cur = null, idx = 0, nextT = 0, timer = 0, loops = 0, listeners = [], stopSeq = 0;
+  const emit = () => listeners.forEach(f => f(api.state()));
+  function tick() {
+    if (!cur || !ctx) return;
+    const tr = TRACKS[cur], sp = 60 / tr.bpm / 4, total = tr.chords.length * 16;
+    while (nextT < ctx.currentTime + 0.15) {
+      if (idx > 0 && idx % total === 0) {
+        loops++;
+        if (api.rotate) { const n = IDS[(IDS.indexOf(cur) + 1) % IDS.length]; cur = n; idx = 0; emit(); continue; }
+      }
+      step(ctx, { out, noiseBuf, waves }, TRACKS[cur], idx, nextT); idx++; nextT += sp;
+    }
+  }
+  const api = {
+    tracks: IDS.map(id => ({ id, title: TRACKS[id].title, mood: TRACKS[id].mood, bpm: TRACKS[id].bpm, seconds: Math.round(TRACKS[id].chords.length * 16 * 60 / TRACKS[id].bpm / 4) })),
+    rotate: false,
+    play(id) { if (!ensure() || !TRACKS[id]) return; stopSeq++; if (out) { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.value = muted ? 0 : volume; } cur = id; idx = 0; loops = 0; nextT = ctx.currentTime + 0.06; clearInterval(timer); timer = setInterval(tick, 25); tick(); emit(); },
+    playRandom(except) { const pool = IDS.filter(i => i !== except); api.play(pool[Math.floor(Math.random() * pool.length)]); },
+    next() { api.play(IDS[(IDS.indexOf(cur) + 1) % IDS.length] || IDS[0]); },
+    stop(fade = 0.05) {
+      clearInterval(timer); timer = 0; cur = null;
+      if (out && ctx) { const g = out.gain; g.cancelScheduledValues(ctx.currentTime); g.setValueAtTime(g.value, ctx.currentTime); g.setTargetAtTime(0, ctx.currentTime, fade); const me = ++stopSeq; setTimeout(() => { if (out && me === stopSeq && !cur) { g.cancelScheduledValues(ctx.currentTime); g.value = muted ? 0 : volume; } }, fade * 6000); }
+      emit();
+    },
+    ready() { return !!ctx && ctx.state === 'running'; },
+    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (out) out.gain.value = muted ? 0 : volume; },
+    setMuted(m) { muted = !!m; if (out) out.gain.value = muted ? 0 : volume; emit(); },
+    get muted() { return muted; }, get volume() { return volume; },
+    state() { return { playing: cur, muted, volume }; },
+    onChange(f) { listeners.push(f); },
+    unlock() { ensure(); },
+    async renderOffline(id, AC) {   // test hook: whole loop into an OfflineAudioContext
+      const tr = TRACKS[id], a = setup(AC), sp = 60 / tr.bpm / 4;
+      for (let i = 0; i < tr.chords.length * 16; i++) step(AC, a, tr, i, 0.05 + i * sp);
+      return AC.startRendering();
+    },
+    _check() { return IDS.map(id => TRACKS[id].melody.map((b, k) => b.length === 16 ? null : `${id} bar ${k + 1}: ${b.length} steps`)).flat().filter(Boolean).concat(IDS.map(id => TRACKS[id].melody.length === TRACKS[id].chords.length ? null : `${id}: ${TRACKS[id].melody.length} melody bars vs ${TRACKS[id].chords.length} chords`).filter(Boolean)); },
+  };
+  root.PixelMusic = api;
+})(typeof window !== 'undefined' ? window : this);
+
+/*
  * Pixel Ancients battle sounds: 8-bit effects synthesised with the Web Audio API (no audio files).
  * PixelSFX.play(name), .setVolume(0..1), .setMuted(bool). Sound only starts after a click (browser rule).
  */
@@ -268,6 +428,7 @@
         <button class="btn" data-a="skip">Skip to end</button>
         <button class="btn" data-a="restart">Replay</button>
         ${opts.gif === false ? '' : '<button class="btn" data-a="gif">Download GIF clip</button>'}
+        ${root.PixelMusic ? '<button class="btn" data-a="music" aria-pressed="false"></button>' : ''}
         ${root.PixelSFX ? '<button class="btn" data-a="sound" aria-pressed="false"></button><input class="arena-vol" type="range" min="0" max="100" aria-label="Sound volume" style="width:84px;accent-color:#e8553e;vertical-align:middle;margin-left:-2px">' : ''}
         <span class="arena-msg" role="status"></span>
       </div>`;
@@ -277,23 +438,38 @@
     // ---- sound: on by default, mute + volume remembered on this device ----
     const SFX = root.PixelSFX, keep = { get(k, d) { try { const v = localStorage.getItem('pa:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('pa:' + k, JSON.stringify(v)); } catch {} } };
     const sndBtn = el.querySelector('[data-a="sound"]'), volIn = el.querySelector('.arena-vol');
-    const syncSound = () => { if (!SFX) return; sndBtn.textContent = SFX.muted ? '🔇 Sound off' : '🔊 Sound on'; sndBtn.setAttribute('aria-pressed', String(!SFX.muted)); volIn.value = Math.round(SFX.volume * 100); };
-    if (SFX) { SFX.setMuted(keep.get('sfxMuted', false)); SFX.setVolume(keep.get('sfxVol', 0.6)); syncSound(); }
+    // ---- music: a random track per replay (never the same twice in a row), well under the sound effects ----
+    const MUS = root.PixelMusic, MUSIC_LEVEL = 0.35, musBtn = el.querySelector('[data-a="music"]');
+    const syncSound = () => {
+      if (SFX) { sndBtn.textContent = SFX.muted ? '🔇 Sound off' : '🔊 Sound on'; sndBtn.setAttribute('aria-pressed', String(!SFX.muted)); volIn.value = Math.round(SFX.volume * 100); }
+      if (MUS && musBtn) { musBtn.textContent = MUS.muted ? '🎵 Music off' : '🎵 Music on'; musBtn.setAttribute('aria-pressed', String(!MUS.muted)); }
+    };
+    const pickTrack = () => { const ids = MUS.tracks.map(x => x.id), last = keep.get('lastTrack', null), pool = ids.filter(i => i !== last); const id = pool[Math.floor(Math.random() * pool.length)]; keep.set('lastTrack', id); return id; };
+    let track = MUS ? pickTrack() : null;
+    if (SFX) { SFX.setMuted(keep.get('sfxMuted', false)); SFX.setVolume(keep.get('sfxVol', 0.6)); }
+    if (MUS) { MUS.setMuted(keep.get('musicMuted', false)); MUS.setVolume((SFX ? SFX.volume : 0.6) * MUSIC_LEVEL); }
+    syncSound();
+    const musicTick = () => {
+      if (!MUS) return;
+      const want = !dead && playing && !sc.ended && !MUS.muted;
+      if (want && !MUS.state().playing && MUS.ready()) MUS.play(track);
+      else if (!want && MUS.state().playing) MUS.stop(sc.ended ? 0.45 : 0.08);   // fades out under the victory fanfare
+    };
     const live = s => { if (SFX) s.sfx = name => { if (playing) SFX.play(name, speed); }; return s; };
     sc = live(sc);
     if (SFX) {
-      const unlock = () => { SFX.unlock(); document.removeEventListener('pointerdown', unlock, true); document.removeEventListener('keydown', unlock, true); };
+      const unlock = () => { SFX.unlock(); if (MUS) MUS.unlock(); document.removeEventListener('pointerdown', unlock, true); document.removeEventListener('keydown', unlock, true); };
       document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);   // browsers allow sound after the first tap or key press
-      volIn.oninput = () => { SFX.setVolume(volIn.value / 100); keep.set('sfxVol', SFX.volume); if (SFX.muted && +volIn.value > 0) { SFX.setMuted(false); keep.set('sfxMuted', false); } syncSound(); };
+      volIn.oninput = () => { SFX.setVolume(volIn.value / 100); if (MUS) MUS.setVolume(SFX.volume * MUSIC_LEVEL); keep.set('sfxVol', SFX.volume); if (SFX.muted && +volIn.value > 0) { SFX.setMuted(false); keep.set('sfxMuted', false); } syncSound(); };
     }
     const reduce = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) { const f = sc.sfx; sc.sfx = null; advance(sc, Infinity); sc.sfx = f; t = sc.steps.length * STEP + 2000; playing = false; }
     const loop = ts => {
-      if (dead || !el.isConnected) { dead = true; return; }
+      if (dead || !el.isConnected) { dead = true; if (MUS) MUS.stop(); return; }
       const dt = lastFrame ? Math.min(100, ts - lastFrame) : 0; lastFrame = ts;
       if (playing) t += dt * speed;
       advance(sc, t);
-      draw(ctx, sc, t);
+      draw(ctx, sc, t); musicTick();
       if (sc.ended && t - sc.endT > 2500 && playing) { playing = false; setBtn(); if (opts.onEnd) opts.onEnd(); }
       raf = requestAnimationFrame(loop);
     };
@@ -304,7 +480,8 @@
       if (act === 'play') { if (!sc.ended) playing = !playing; setBtn(); }
       if (act === 'speed') { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; a.textContent = `Speed ${speed}x`; }
       if (act === 'skip') { const f = sc.sfx; sc.sfx = null; t = sc.steps.length * STEP + 600; advance(sc, t); sc.sfx = f; sc.floaters = []; sc.shots = []; sc.shouts = []; }
-      if (act === 'restart') { sc = live(makeScene(result)); t = 0; playing = true; setBtn(); }
+      if (act === 'restart') { sc = live(makeScene(result)); t = 0; playing = true; setBtn(); if (MUS) { MUS.stop(); track = pickTrack(); } }
+      if (act === 'music' && MUS) { MUS.unlock(); MUS.setMuted(!MUS.muted); keep.set('musicMuted', MUS.muted); syncSound(); }
       if (act === 'sound' && SFX) { SFX.unlock(); SFX.setMuted(!SFX.muted); keep.set('sfxMuted', SFX.muted); syncSound(); if (!SFX.muted) SFX.play('pet'); }
       if (act === 'gif') {
         const msg = el.querySelector('.arena-msg'); msg.textContent = 'Making the clip…'; a.disabled = true;
@@ -328,7 +505,7 @@
       }
     };
     raf = requestAnimationFrame(loop);
-    return { stop() { dead = true; cancelAnimationFrame(raf); }, scene: () => sc, time: () => t };
+    return { stop() { dead = true; cancelAnimationFrame(raf); if (MUS) MUS.stop(); }, scene: () => sc, time: () => t };
   }
 
   // ---------- GIF clip of the finish ----------

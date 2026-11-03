@@ -1175,7 +1175,7 @@
   function lookChecks(L) {
     const min = CFG.registration.minTotalMatches;
     return [
-      [!!L.lastGame, L.lastGame ? `Match data is public (last game ${fmtDateTime(L.lastGame)})` : 'No visible matches. Turn on Expose Public Match Data in Dota 2 (Settings › Social › Options), play one game, then try again.'],
+      [!!L.lastGame, L.lastGame ? `Match data is public (last game ${fmtDateTime(L.lastGame)})` : 'No visible matches. Turn on Expose Public Match Data in Dota 2 (Settings › Options › Social), play one game, then try again.'],
       [L.total >= min, `${L.total} total matches (needs ${min})`],
       [!L.taken, L.taken ? 'Already linked to another player. If it\'s yours, ask an admin on Discord.' : 'Not linked to anyone yet'],
     ];
@@ -2026,12 +2026,12 @@
       <div class="hero compact"><div class="eyebrow">Fight Night · ${fmtDateTime(r.at)}</div>
         <h1 class="long">${esc(a.name)} vs ${esc(b.name)}</h1>
         <p class="tagline">${esc(res.teams[res.winner].name)} won${res.reason === 'time' ? ' on HP left' : ''} · MVP ${esc(r.mvpName)}</p></div>
-      <div class="arena" id="arena"></div>
+      <div class="arena" id="fightArena"></div>
       <div class="section-head"><div><div class="eyebrow">Who did what</div><h2>Fight stats</h2></div><div class="status" style="margin:0"><span id="fCopyMsg" role="status"></span><button class="btn" data-g="copyfight">Copy link</button></div></div>
       <table class="table"><thead><tr><th>Fighter</th><th>Guild</th><th class="r">Damage</th><th class="r hide-sm">Healing</th><th class="r">Kills</th><th class="r hide-sm">HP left</th></tr></thead><tbody>
       ${rows.map(u => `<tr><td>${esc(u.name)}${u.key === res.mvp ? ' <span class="tag cap">MVP</span>' : ''}${u.pet ? ` <span class="petnote">+ ${esc(u.pet)}</span>` : ''}</td><td>${esc(res.teams[u.team].name)}</td><td class="r num">${u.dealt}</td><td class="r num hide-sm">${u.healed}</td><td class="r num">${u.kills}</td><td class="r num hide-sm">${u.hp ? Math.round(u.hp / u.maxHp * 100) + '%' : 'KO'}</td></tr>`).join('')}
       </tbody></table>`;
-    arenaCtl = window.LeagueArena.mount($('#arena'), res, { fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}` });
+    arenaCtl = window.LeagueArena.mount($('#fightArena'), res, { fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}` });
   }
 
   // ---- duel sandbox ----
@@ -2062,11 +2062,11 @@
         <p class="tagline">Pit any two guilds, or any player, against each other. Nothing counts.</p>
         <p class="sub">Everyone fights with the gear they're wearing right now. Each fight rolls new luck, so run it a few times.</p></div>
       <div class="duel-pick">${sel('duelA', duel.a)}<span class="vs">vs</span>${sel('duelB', duel.b)}<button class="btn-red" data-g="duel">Fight!</button></div>
-      <div class="arena" id="arena"></div>`;
+      <div class="arena" id="duelArena"></div>`;
     runDuel();
   }
   function runDuel() {
-    const a = duelTeam(duel.a), b = duelTeam(duel.b), el = $('#arena');
+    const a = duelTeam(duel.a), b = duelTeam(duel.b), el = $('#duelArena');
     if (!a || !b || !el) { if (el) el.innerHTML = '<div class="empty"><strong>Pick two sides.</strong></div>'; return; }
     if (arenaCtl) arenaCtl.stop();
     const res = B.simulate(a, b, `duel|${duel.a}|${duel.b}|${duel.seed}`, { underdog: GCFG.underdog });
