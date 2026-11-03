@@ -363,6 +363,24 @@
   .discord-card .btn-red { text-decoration: none; white-space: nowrap; }
   .gate .acts, .admin-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
   .admin-tools { margin: 28px 0 14px; }
+  .vstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .vstat { padding: 16px 18px; background: linear-gradient(180deg, #17191b, #111314); border: 1px solid var(--line); }
+  .vstat .k { color: var(--muted); font: 600 11.5px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; }
+  .vstat .v { font: 800 34px/1.1 var(--display); margin-top: 8px; font-variant-numeric: tabular-nums lining-nums; }
+  .vstat .s { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .vchart { position: relative; margin-top: 12px; padding: 14px 16px 8px; background: var(--panel); border: 1px solid var(--line); }
+  .vchart .ttl { color: var(--muted); font: 600 11.5px/1.45 var(--body); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 8px; }
+  .vchart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .vchart .hit { fill: transparent; cursor: default; }
+  .vchart .bar { fill: var(--red-hot); }
+  .vchart g.d:hover .bar, .vchart g.d:focus .bar { fill: #ff8a6a; }
+  .vchart .tip { position: absolute; pointer-events: none; background: #0a0b0c; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; white-space: nowrap; transform: translate(-50%, -110%); display: none; }
+  .vrow { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 10px; }
+  .vrow .table { margin: 0; }
+  .vjoin { padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); }
+  .vjoin p { margin: 6px 0 0; color: var(--muted); }
+  .vjoin b { color: var(--text); font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) { .vstats { grid-template-columns: repeat(2, 1fr); } .vrow { grid-template-columns: 1fr; } .vstat .v { font-size: 28px; } }
   .gate .acts a, .admin-tools a { text-decoration: none; }
   .admin-table td .sub2 { color: var(--muted); font-size: 12.5px; }
   .admin-table .unlink { padding: 6px 10px; font-size: 13px; }
@@ -1281,7 +1299,79 @@
     };
   }
 
-  // ---------- admin: linked players ----------
+  // ---------- anonymous visit counter (only admins can read the totals) ----------
+  const visitorId = (() => {
+    let id = null; try { id = localStorage.getItem('pa:vid'); } catch {}
+    if (!id || !/^[a-z0-9]{12,32}$/.test(id)) {
+      const a = new Uint8Array(12); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.random() * 256; });
+      id = Array.from(a, b => (b % 36).toString(36)).join('') + Date.now().toString(36).slice(-6);
+      try { localStorage.setItem('pa:vid', id); } catch {}
+    }
+    return id;
+  })();
+  const VISIT_PAGES = ['home', 'weekly', 'league', 'season', 'avatar', 'rules', 'register', 'calibrate', 'guilds', 'guild', 'fight', 'duel'];
+  function logVisit(page) {
+    if (CFG.demo || !state.sb || !VISIT_PAGES.includes(page) || state.admin.isAdmin === true) return;
+    const key = 'pa:v:' + page; let last = 0; try { last = +localStorage.getItem(key) || 0; } catch {}
+    if (Date.now() - last < 30 * 60 * 1000) return;                       // one view per page per half hour is plenty
+    try { localStorage.setItem(key, String(Date.now())); } catch {}
+    state.sb.rpc('log_visit', { p_visitor: visitorId, p_page: page }).then(() => {}, () => {});
+  }
+
+  // ---------- admin: visitors + linked players ----------
+  const PAGE_NAME = { home: 'Home', weekly: 'Weekly', league: 'League', season: 'Season', avatar: 'Avatar', rules: 'Rules', register: 'Join', calibrate: 'Calibrate', guilds: 'Guilds', guild: 'Guild pages', fight: 'Fight replays', duel: 'Duel sandbox' };
+  function demoStats() {
+    let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const today = S.localDay(state.now, TZ), daily = Array.from({ length: 30 }, (_, k) => { const v = Math.round(4 + k * 0.9 + r() * 9 + ((k + 3) % 7 >= 5 ? 6 : 0)); return { day: new Date(S.dayToTs(today - 29 + k, TZ) * 1000 + TZ * 3600e3).toISOString().slice(0, 10), visitors: v, views: Math.round(v * (2.2 + r())) }; });
+    const sum = (a, k) => a.reduce((s, x) => s + x[k], 0);
+    return { today: daily[29].visitors, week: Math.round(sum(daily.slice(-7), 'visitors') * 0.55), month: Math.round(sum(daily, 'visitors') * 0.4), all: Math.round(sum(daily, 'visitors') * 0.45), views_today: daily[29].views, views_month: sum(daily, 'views'), views_all: sum(daily, 'views') + 120, daily,
+      pages: [['weekly', 410], ['home', 380], ['guilds', 230], ['fight', 190], ['register', 120], ['avatar', 95], ['season', 60], ['rules', 40]].map(([page, views]) => ({ page, views, visitors: Math.round(views / 2.6) })), linked_week: 6, linked_month: 14, linked_all: state.members.length };
+  }
+  async function loadStats() {
+    const AD = state.admin; AD.statsBusy = true;
+    if (CFG.demo) { AD.stats = demoStats(); AD.statsErr = ''; }
+    else {
+      const { data, error } = await state.sb.rpc('visit_stats', { p_days: 30 });
+      if (error) { AD.stats = null; AD.statsErr = /visit_stats/.test(error.message || '') || error.code === 'PGRST202' ? 'The visitor counter isn\'t set up yet: run the visitor-counter SQL in Supabase.' : 'Visitor numbers couldn\'t load right now.'; }
+      else { AD.stats = data && typeof data === 'object' ? data : null; AD.statsErr = AD.stats ? '' : 'Visitor numbers couldn\'t load right now.'; }
+    }
+    AD.statsBusy = false; AD.statsAt = Date.now(); renderAdmin();
+  }
+  function visitorsBlock() {
+    const AD = state.admin, st = AD.stats, n = x => Number(x || 0).toLocaleString('en-US');
+    const head = `<div class="section-head"><div><div class="eyebrow">Anonymous · admins not counted</div><h2>Visitors</h2></div><button class="btn" data-adm="stats">${AD.statsBusy ? 'Loading…' : 'Refresh'}</button></div>`;
+    if (!st) return head + `<div class="result">${esc(AD.statsErr || 'Loading visitor numbers…')}</div>`;
+    const tiles = [['Today', st.today, `${n(st.views_today)} page views`], ['Last 7 days', st.week, 'unique visitors'], ['Last 30 days', st.month, `${n(st.views_month)} page views`], ['All time', st.all, `${n(st.views_all)} page views`]]
+      .map(([k, v, sub]) => `<div class="vstat"><div class="k">${k}</div><div class="v">${n(v)}</div><div class="s">${sub}</div></div>`).join('');
+    // daily unique visitors, last 30 days: one hue, thin bars with 4px rounded tops, hover for the exact number
+    const days = (st.daily || []).slice(-30), max = Math.max(4, ...days.map(d => d.visitors)), Wd = (window.innerWidth || 1280) < 640 ? 380 : 720, L = 30, Hc = 150, top = 14, bw = (Wd - L) / Math.max(1, days.length);
+    // gridline top = a round number with an even multiplier, so the halfway line is a whole number too
+    const nice = (() => { const step = Math.pow(10, Math.floor(Math.log10(max))); let k = Math.ceil(max / step); if (k % 2) k++; return k * step; })();
+    const y = v => Hc - (v / nice) * (Hc - top);
+    const fmtD = iso => { const [Y, M, D] = iso.split('-').map(Number); return `${D} ${MONTHS[M - 1]}`; };
+    const bars = days.map((d, i) => { const x = L + i * bw + 1, w = Math.max(2, bw - 3), h = Hc - y(d.visitors), r = Math.min(4, w / 2, h);
+      const path = h <= 0 ? '' : `<path class="bar" d="M${x},${Hc} V${Hc - h + r} Q${x},${Hc - h} ${x + r},${Hc - h} H${x + w - r} Q${x + w},${Hc - h} ${x + w},${Hc - h + r} V${Hc} Z"/>`;
+      return `<g class="d" tabindex="0" data-tip="${esc(fmtD(d.day))}: ${d.visitors} visitor${d.visitors === 1 ? '' : 's'}, ${d.views} views" data-x="${(x + w / 2) / Wd}" data-y="${y(d.visitors) / (Hc + 22)}"><rect class="hit" x="${L + i * bw}" y="0" width="${bw}" height="${Hc}"/>${path}</g>`; }).join('');
+    const grid = [0, nice / 2, nice].map(v => `${v ? `<line x1="${L}" x2="${Wd}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.07)"/>` : ''}<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" fill="#8e8981" font-size="11">${v}</text>`).join('');
+    const last = days.length - 1;
+    const ticks = days.map((d, i) => { const isLast = i === last; if (!isLast && (i % 7 !== 0 || last - i < 5)) return '';
+      const anchor = isLast ? 'end' : i === 0 ? 'start' : 'middle', tx = isLast ? Wd : i === 0 ? L : L + i * bw + bw / 2;
+      return `<text x="${tx}" y="${Hc + 16}" text-anchor="${anchor}" fill="#8e8981" font-size="11">${isLast ? 'Today' : fmtD(d.day)}</text>`; }).join('');
+    const chart = `<div class="vchart"><div class="ttl">Unique visitors per day · last 30 days</div><svg viewBox="0 -2 ${Wd} ${Hc + 22}" role="img" aria-label="Unique visitors per day over the last 30 days">${grid}<line x1="${L}" x2="${Wd}" y1="${Hc}" y2="${Hc}" stroke="rgba(255,255,255,.18)"/>${bars}${ticks}</svg><div class="tip" role="status"></div></div>`;
+    const pages = (st.pages || []).slice(0, 7);
+    const pagesTbl = `<table class="table"><thead><tr><th>Page · last 30 days</th><th class="r">Views</th><th class="r">Visitors</th></tr></thead><tbody>${pages.length ? pages.map(pg => `<tr><td>${esc(PAGE_NAME[pg.page] || pg.page)}</td><td class="r num">${n(pg.views)}</td><td class="r num">${n(pg.visitors)}</td></tr>`).join('') : '<tr><td colspan="3">No visits yet.</td></tr>'}</tbody></table>`;
+    const joined = `<div class="vjoin"><div class="eyebrow">Visitors who joined</div><p><b>${n(st.linked_week)}</b> linked a Dota account in the last 7 days</p><p><b>${n(st.linked_month)}</b> in the last 30 days</p><p><b>${n(st.linked_all)}</b> linked in total</p></div>`;
+    return head + `<div class="vstats">${tiles}</div>${chart}<div class="vrow">${pagesTbl}${joined}</div>`;
+  }
+  function wireChart(view) {
+    const box = view.querySelector('.vchart'); if (!box) return;
+    const tip = box.querySelector('.tip'), svg = box.querySelector('svg');
+    const show = g => { if (!g) { tip.style.display = 'none'; return; } const r = svg.getBoundingClientRect(), b = box.getBoundingClientRect(); tip.textContent = g.dataset.tip; tip.style.display = 'block'; const half = tip.offsetWidth / 2, cx = r.left - b.left + r.width * +g.dataset.x; tip.style.left = Math.min(Math.max(cx, half + 4), b.width - half - 4) + 'px'; tip.style.top = (r.top - b.top + r.height * +g.dataset.y) + 'px'; };
+    svg.addEventListener('mouseover', e => show(e.target.closest('g.d'))); svg.addEventListener('mouseleave', () => show(null));
+    svg.addEventListener('focusin', e => show(e.target.closest('g.d'))); svg.addEventListener('focusout', () => show(null));
+  }
+
+
   function guildOfDiscord(did) { return (state.guilds || []).find(g => (g.members || []).some(x => String(x.discord_id) === String(did))); }
 
   function renderAdmin() {
@@ -1289,9 +1379,9 @@
     const AD = state.admin;
     const hero = `
       <div class="hero compact">
-        <div class="eyebrow">League admin · linked players</div>
-        <h1>Players</h1>
-        <p class="sub">Everyone who linked their own Dota account, newest first. If someone claimed an account that isn't theirs, unlink it and the real owner can link it again.</p>
+        <div class="eyebrow">League admin</div>
+        <h1>Admin</h1>
+        <p class="sub">Who's visiting, and everyone who linked their own Dota account. If someone claimed an account that isn't theirs, unlink it and the real owner can link it again.</p>
       </div>`;
     const note = CFG.demo ? `<div class="banner">Preview: sample players, and unlinking here isn't saved.</div>` : '';
     // Only admins see this page. Everyone else (logged out, or not in league_admins) gets a plain "unavailable".
@@ -1307,8 +1397,10 @@
       .sort((a, b) => String(b.linkedAt || '').localeCompare(String(a.linkedAt || '')));
     const fromCfg = state.members.length - (CFG.demo ? state.members.length : rows.length);
     const fmtLinked = t => { if (!t) return '–'; const d = new Date(t); return isNaN(d) ? '–' : fmtDateTime(Math.floor(d / 1000)); };
-    view.innerHTML = hero + note + `
-      <div class="admin-tools"><span class="reg-hint">${rows.length} linked${fromCfg ? ` · ${fromCfg} more from config.js (edit that file to change them)` : ''}</span><span class="link-msg ${AD.msgOk ? 'ok' : 'bad'}" id="admMsg" role="status" style="margin:0">${esc(AD.msg || '')}</span></div>
+    if (!AD.stats && !AD.statsBusy && !AD.statsErr) loadStats();
+    view.innerHTML = hero + note + visitorsBlock() + `
+      <div class="section-head"><div><div class="eyebrow">Newest first</div><h2>Linked players</h2></div></div>
+      <div class="admin-tools" style="margin-top:0"><span class="reg-hint">${rows.length} linked${fromCfg ? ` · ${fromCfg} more from config.js (edit that file to change them)` : ''}</span><span class="link-msg ${AD.msgOk ? 'ok' : 'bad'}" id="admMsg" role="status" style="margin:0">${esc(AD.msg || '')}</span></div>
       ${rows.length ? `<table class="table admin-table"><thead><tr><th>Player</th><th class="hide-sm">Discord ID</th><th class="hide-sm">Linked</th><th class="hide-sm">Guild</th><th class="r"></th></tr></thead><tbody>
       ${rows.map(m => { const g = guildsOn ? guildOfDiscord(avatarKey(m)) : null; return `<tr>
         <td><b>${esc(m.name)}</b><div class="sub2">Friend ID <a href="https://www.opendota.com/players/${m.id}" target="_blank" rel="noopener">${m.id}</a></div></td>
@@ -1317,7 +1409,7 @@
         <td class="hide-sm">${g ? esc(guildName(g)) : '–'}</td>
         <td class="r"><button class="btn unlink" data-adm="unlink" data-id="${m.id}" data-d="${esc(m.discordId || '')}">Unlink</button></td></tr>`; }).join('')}
       </tbody></table>` : `<div class="empty"><strong>Nobody has linked yet.</strong> Share the Join page on your Discord.</div>`}`;
-    wireAdmin();
+    wireAdmin(); wireChart(view);
   }
 
   async function checkAdmin() {
@@ -1340,6 +1432,7 @@
       const b = ev.target.closest('[data-adm]'); if (!b) return;
       const act = b.dataset.adm;
       if (act === 'login') { store.set('returnTo', 'admin'); await state.sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } }); return; }
+      if (act === 'stats') { if (!AD.statsBusy) loadStats(); return; }
       if (act === 'copy') { try { await navigator.clipboard.writeText(b.dataset.text); $('#admCopy').textContent = 'Copied.'; } catch { $('#admCopy').textContent = 'Select the line above to copy it.'; } return; }
       if (act === 'unlink') {
         if (!confirmLike(b)) return;
@@ -1439,7 +1532,7 @@
     if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
     if (state.session && store.get('returnToAvatar')) { store.set('returnToAvatar', null); location.hash = 'avatar'; }
     if (state.session && store.get('returnTo')) { const r = store.get('returnTo'); store.set('returnTo', null); location.hash = r; }
-    checkAdmin();
+    checkAdmin().then(() => logVisit(VIEWS.includes(location.hash.slice(1).split('/')[0]) ? location.hash.slice(1).split('/')[0] : 'home'));
   }
 
   async function loadAvatars() {
@@ -2308,6 +2401,7 @@
     const [h, arg] = location.hash.slice(1).split('/');
     if (h === 'join' && arg) { if (state.ready) handleJoinLink(arg); else state.pendingJoin = arg; return; }
     const v = VIEWS.includes(h) ? h : 'home';
+    logVisit(v);
     if (guildsOn && ['guild', 'fight', 'duel'].includes(v) && state.ready && !state.loading) renderGuildViews();
     if (v === 'admin' && !CFG.demo && state.admin.isAdmin == null && !state.admin.checking) checkAdmin();
     else if (arenaCtl && !['fight', 'duel'].includes(v)) { arenaCtl.stop(); arenaCtl = null; }
