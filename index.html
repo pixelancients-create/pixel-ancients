@@ -51,12 +51,12 @@
     position: sticky; top: 0; z-index: 20; background: rgba(5, 6, 6, .92); backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(255,255,255,.06);
   }
-  header.top .wrap { display: flex; align-items: center; gap: 20px; min-height: 68px; flex-wrap: wrap; }
+  header.top .wrap { display: flex; align-items: center; gap: 14px; min-height: 68px; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; text-decoration: none; color: var(--text); }
   .brand span { font: 800 22px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
-  nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
   nav.tabs a {
-    color: var(--muted); text-decoration: none; padding: 10px 10px; font: 600 14px/1 var(--body);
+    color: var(--muted); text-decoration: none; padding: 10px 9px; font: 600 14px/1 var(--body);
     letter-spacing: .12em; text-transform: uppercase; position: relative;
   }
   nav.tabs a:hover { color: var(--text); }
@@ -75,10 +75,10 @@
   .btn-red:hover, .join:hover { background: linear-gradient(180deg, #e8553e 0%, #b23222 100%); }
   .btn-red[disabled] { opacity: .35; cursor: default; }
   .join { padding: 10px 16px; font-size: 12px; white-space: nowrap; }
-  .hdr-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+  .hdr-actions { display: flex; align-items: center; gap: 8px; flex: none; }
   .hdr-actions [hidden] { display: none !important; }
   /* Discord: a quiet outlined button, so Register stays the one red call to action */
-  .dc-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.16); color: #b9b3aa; font: 600 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+  .dc-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.16); color: #b9b3aa; font: 600 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
   .dc-ghost:hover { color: var(--text); border-color: rgba(255,255,255,.35); }
   .dc-ghost svg { width: 15px; height: 15px; fill: currentColor; opacity: .85; flex: none; }
   .dc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14.5px; }
@@ -437,6 +437,35 @@
   .steps li::before { counter-increment: step; content: counter(step); font: 900 44px/1 var(--display); color: var(--red-hot); opacity: .85; display: block; margin-bottom: 10px; }
   .steps h3 { margin: 0 0 6px; }
   .steps p { color: var(--muted); margin: 0; font-size: 15px; }
+  /* ---- Gear catalogue ---- */
+  .gear-you { display: grid; grid-template-columns: auto 1fr; gap: 6px 24px; align-items: center; margin: 22px 0 6px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--line); }
+  .gear-you .big { font: 800 30px/1 var(--display); }
+  .gear-you .big small { font: 600 14px var(--body); color: var(--muted); letter-spacing: 0; }
+  .gear-you .bar { height: 4px; background: rgba(255,255,255,.1); margin-top: 8px; } .gear-you .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), var(--ember)); }
+  .gear-you .nx { color: var(--muted); font-size: 14px; } .gear-you .nx b { color: var(--text); }
+  .gear-filters { display: grid; gap: 10px; margin: 18px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chips .lbl { color: var(--muted); font: 600 11px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; width: 64px; }
+  .chip { background: transparent; border: 1px solid var(--line); color: var(--text); padding: 7px 11px; font: 600 12.5px/1 var(--body); cursor: pointer; }
+  .chip[aria-pressed="true"] { border-color: var(--rc, var(--red-hot)); box-shadow: inset 0 0 0 1px var(--rc, var(--red-hot)); color: #fff; }
+  .chip .dot { display: inline-block; width: 8px; height: 8px; background: var(--rc); margin-right: 6px; vertical-align: 1px; }
+  .gear-tools { display: flex; gap: 10px; flex-wrap: wrap; }
+  .gear-tools input, .gear-tools select { background: #0b0d0e; border: 1px solid var(--line); color: var(--text); padding: 9px 12px; font: 500 14px var(--body); }
+  .gear-tools input { flex: 1; min-width: 200px; }
+  .gear-count { color: var(--muted); font-size: 13.5px; margin: 6px 0 0; }
+  .gear-group h2 { margin: 34px 0 12px; display: flex; align-items: baseline; gap: 12px; } .gear-group h2 small { font: 600 13px var(--body); color: var(--muted); letter-spacing: .08em; }
+  .gcat { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .gitem { display: grid; grid-template-columns: 64px 1fr; gap: 6px 14px; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--rc); }
+  .gitem .slot-ic { width: 64px; height: 64px; }
+  .gitem.locked .slot-ic img { filter: grayscale(1) brightness(.45); }
+  .gitem .rar { font: 700 10.5px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--rc); }
+  .gitem h3 { margin: 4px 0 6px; font: 700 16px/1.2 var(--body); letter-spacing: 0; text-transform: none; }
+  .gitem .how { font-size: 14px; line-height: 1.4; }
+  .gitem .fight { grid-column: 1 / -1; font-size: 13px; color: var(--muted); line-height: 1.4; } .gitem .fight b { color: var(--gold); font-weight: 600; }
+  .gitem .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+  .gitem .mine { color: var(--text); font-weight: 600; } .gitem .mine .tick { color: var(--radiant); }
+  .gitem .pbar { flex: 1; max-width: 110px; height: 3px; background: rgba(255,255,255,.1); } .gitem .pbar i { display: block; height: 100%; background: var(--ember); }
+  @media (max-width: 640px) { .chips .lbl { width: 100%; } .gcat { grid-template-columns: 1fr; } .gear-you { grid-template-columns: 1fr; } }
   .gear-show { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .gear-show .g { display: flex; gap: 10px; align-items: center; padding: 10px; background: #131517; border: 1px solid var(--line); border-left: 3px solid var(--rc); }
   .gear-show .slot-ic { width: 44px; height: 44px; }
@@ -466,7 +495,7 @@
   footer.site { border-top: 1px solid var(--line); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
   footer.site .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
-  @media (max-width: 1110px) {   /* not enough room for logo + tabs + Discord button on one line: tabs get their own row */
+  @media (max-width: 1180px) {   /* not enough room for logo + tabs + Discord button on one line: tabs get their own row */
     header.top .wrap { gap: 10px; padding-top: 10px; padding-bottom: 6px; }
     nav.tabs { width: calc(100% + 48px); margin: 0 -24px; padding: 0 20px; order: 3; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     nav.tabs::-webkit-scrollbar { display: none; }
@@ -629,6 +658,7 @@
       <a href="#season">Season</a>
       <a href="#guilds" data-feature="guilds">Guilds</a>
       <a href="#avatar" data-feature="avatars">Avatar</a>
+      <a href="#gear" data-feature="avatars">Gear</a>
       <a href="#rules">Rules</a>
       <a href="#register" id="navRegister">Register</a>
     </nav>
@@ -648,6 +678,7 @@
   <section class="view" id="view-league"></section>
   <section class="view" id="view-season"></section>
   <section class="view" id="view-avatar"></section>
+  <section class="view" id="view-gear" data-feature="avatars"></section>
   <section class="view" id="view-rules"></section>
   <section class="view" id="view-register"></section>
   <section class="view" id="view-calibrate"></section>
@@ -1152,9 +1183,8 @@
           <li>Highest ELO at the end of the season is Season Champion; most total Weekly Points is Season Grinder.</li>
         </ul>` : ''}
         ${FEAT.avatars ? `<h2>Avatar gear</h2>
-        <p>Everyone gets a pixel avatar. Gear unlocks from your season stats; dress your avatar on the Avatar page.</p>` : ''}
+        <p>Everyone gets a pixel avatar. Gear unlocks from your season stats; dress your avatar on the Avatar page. Every item, how to unlock it and what it does in battle is in the <a href="#gear">Gear catalogue</a>.</p>` : ''}
       </div>
-      ${FEAT.avatars ? unlockList().replace('<h2>Gear to unlock</h2>', '') : ''}
       <div class="rules">
         <h2>To be tracked</h2>
         <ul>
@@ -1359,7 +1389,7 @@
     }
     return id;
   })();
-  const VISIT_PAGES = ['home', 'weekly', 'league', 'season', 'avatar', 'rules', 'register', 'calibrate', 'guilds', 'guild', 'fight', 'duel'];
+  const VISIT_PAGES = ['home', 'weekly', 'league', 'season', 'avatar', 'gear', 'rules', 'register', 'calibrate', 'guilds', 'guild', 'fight', 'duel'];
   function logVisit(page) {
     if (CFG.demo || !state.sb || !VISIT_PAGES.includes(page) || state.admin.isAdmin === true) return;
     const key = 'pa:v:' + page; let last = 0; try { last = +localStorage.getItem(key) || 0; } catch {}
@@ -1369,7 +1399,7 @@
   }
 
   // ---------- admin: visitors + linked players ----------
-  const PAGE_NAME = { home: 'Home', weekly: 'Weekly', league: 'League', season: 'Season', avatar: 'Avatar', rules: 'Rules', register: 'Register', calibrate: 'Calibrate', guilds: 'Guilds', guild: 'Guild pages', fight: 'Fight replays', duel: 'Duel sandbox' };
+  const PAGE_NAME = { home: 'Home', weekly: 'Weekly', league: 'League', season: 'Season', avatar: 'Avatar', rules: 'Rules', register: 'Register', gear: 'Gear', calibrate: 'Calibrate', guilds: 'Guilds', guild: 'Guild pages', fight: 'Fight replays', duel: 'Duel sandbox' };
   function demoStats() {
     let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     const today = S.localDay(state.now, TZ), daily = Array.from({ length: 30 }, (_, k) => { const v = Math.round(4 + k * 0.9 + r() * 9 + ((k + 3) % 7 >= 5 ? 6 : 0)); return { day: new Date(S.dayToTs(today - 29 + k, TZ) * 1000 + TZ * 3600e3).toISOString().slice(0, 10), visitors: v, views: Math.round(v * (2.2 + r())) }; });
@@ -1578,7 +1608,7 @@
     state.sb = window.supabase.createClient(AV.supabaseUrl, AV.supabaseAnonKey, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true } });
     const { data } = await state.sb.auth.getSession();
     state.session = data.session;
-    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) { state.admin.isAdmin = null; checkAdmin(); } if (!state.loading) { if (FEAT.avatars) renderAvatar(); renderRegister(); renderAdmin(); renderHome(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
+    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) { state.admin.isAdmin = null; checkAdmin(); } if (!state.loading) { if (FEAT.avatars) { renderAvatar(); renderGear(); } renderRegister(); renderAdmin(); renderHome(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
     if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
     if (state.session && store.get('returnToAvatar')) { store.set('returnToAvatar', null); location.hash = 'avatar'; }
     if (state.session && store.get('returnTo')) { const r = store.get('returnTo'); store.set('returnTo', null); location.hash = r; }
@@ -1623,11 +1653,11 @@
         <p class="sub">Every item unlocks from your real season stats. Until you dress your avatar, it wears your best gear automatically.</p>
       </div>`;
     if (!CFG.demo && !loginEnabled) {
-      view.innerHTML = hero + `<div class="gate empty"><strong>Avatar login isn't set up yet</strong>Avatars still appear on the leaderboards wearing each player's best unlocked gear. To let players dress their own, an admin needs to connect Discord login (see "Avatars" in README.md).</div>${unlockList()}`;
+      view.innerHTML = hero + `<div class="gate empty"><strong>Avatar login isn't set up yet</strong>Avatars still appear on the leaderboards wearing each player's best unlocked gear. To let players dress their own, an admin needs to connect Discord login (see "Avatars" in README.md).</div>${gearLink()}`;
       return;
     }
     if (!CFG.demo && !state.session) {
-      view.innerHTML = hero + `<div class="gate"><h2>Log in to dress your avatar</h2><p>Use your Discord account. You'll only be able to change your own avatar.</p><button class="btn-red" data-act="login">Log in with Discord</button></div>${unlockList()}`;
+      view.innerHTML = hero + `<div class="gate"><h2>Log in to dress your avatar</h2><p>Use your Discord account. You'll only be able to change your own avatar.</p><button class="btn-red" data-act="login">Log in with Discord</button></div>${gearLink()}`;
       return wireAvatar();
     }
     const me = lockerPlayer();
@@ -1766,6 +1796,69 @@
     };
   }
 
+  // ---------- Gear catalogue ----------
+  const GF = { slot: 'all', rarity: 'all', q: '', show: 'all' };
+  function gearMe() { if (!FEAT.avatars) return null; if (!CFG.demo && !state.session) return null; const me = lockerPlayer(); return me && state.stats[me.id] ? me : null; }
+  function renderGear() {
+    const view = $('#view-gear'); if (!view) return;
+    const me = gearMe(), st = me ? state.stats[me.id] : null;
+    const earn = A.SLOTS.flatMap(sl => sl.items.filter(i => i.id !== 'none' && !i.free));
+    let you = '';
+    if (me) {
+      const got = earn.filter(it => A.isUnlocked(it, st)).length, nx = A.nextUnlock ? A.nextUnlock(st) : null;
+      you = `<div class="gear-you"><div class="big">${got}<small> of ${earn.length} unlocked</small></div>
+        <div>${nx ? `<div class="nx">Closest: <b>${esc(nx.item.name)}</b> · ${esc(A.requirement(nx.item))} (${bigNum(Math.min(st[nx.item.stat] || 0, nx.item.need))}/${bigNum(nx.item.need)})</div>` : '<div class="nx">Every item unlocked. Legend.</div>'}<div class="bar"><i style="width:${Math.round(got / earn.length * 100)}%"></i></div></div></div>`;
+    }
+    const rar = ['common', 'rare', 'epic', 'legendary', 'unique'];
+    const chip = (key, val, label, extra = '', rc = '') => `<button class="chip" data-gf="${key}" data-v="${val}" aria-pressed="${GF[key] === val}"${rc ? ` style="--rc:${rc}"` : ''}>${extra}${label}</button>`;
+    view.innerHTML = `
+      <div class="hero compact"><div class="eyebrow">Catalogue</div><h1>Gear</h1>
+        <p class="tagline">${earn.length} items to unlock across ${A.SLOTS.length} slots.</p>
+        <p class="sub">Every item unlocks from your real season stats in ${esc(modesOr)} games. Gear resets each season; your saved look carries over.</p></div>
+      ${you}
+      <div class="gear-filters">
+        <div class="chips"><span class="lbl">Slot</span>${chip('slot', 'all', 'All')}${A.SLOTS.map(sl => chip('slot', sl.id, sl.name)).join('')}</div>
+        <div class="chips"><span class="lbl">Rarity</span>${chip('rarity', 'all', 'All')}${rar.map(r => chip('rarity', r, A.RARITY[r].name, '<span class="dot"></span>', A.RARITY[r].color)).join('')}</div>
+        <div class="gear-tools"><input id="gearQ" type="search" placeholder="Search gear or how to unlock it (e.g. assists, KDA)" value="${esc(GF.q)}" aria-label="Search gear">
+          ${me ? `<select id="gearShow" aria-label="Show"><option value="all">All items</option><option value="have">Unlocked</option><option value="need">Still locked</option><option value="close">Almost there (75%+)</option></select>` : ''}</div>
+      </div>
+      <div id="gearList"></div>`;
+    if (me) $('#gearShow').value = GF.show;
+    gearList();
+    view.onclick = e => { const c = e.target.closest('[data-gf]'); if (!c) return; GF[c.dataset.gf] = c.dataset.v; view.querySelectorAll(`[data-gf="${c.dataset.gf}"]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === c.dataset.v))); gearList(); };
+    $('#gearQ').oninput = e => { GF.q = e.target.value; gearList(); };
+    if (me) $('#gearShow').onchange = e => { GF.show = e.target.value; gearList(); };
+  }
+  function gearList() {
+    const box = $('#gearList'); if (!box) return;
+    const me = gearMe(), st = me ? state.stats[me.id] : null, ms = (state.members || []).filter(m => state.stats[m.id]);
+    const base = { skin: 1, hair: 'short', hairColor: 1, tunic: 0, head: 'none', body: 'tunic', cape: 'none', weapon: 'training_sword', pet: 'none', aura: 'none' };
+    const q = GF.q.trim().toLowerCase();
+    let n = 0;
+    const groups = A.SLOTS.filter(sl => GF.slot === 'all' || sl.id === GF.slot).map(sl => {
+      const items = sl.items.filter(it => it.id !== 'none').filter(it => {
+        if (GF.rarity !== 'all' && it.rarity !== GF.rarity) return false;
+        if (q && !`${it.name} ${it.free ? 'starter' : A.requirement(it)} ${guildsOn ? B.itemBattleText(it.id) || '' : ''}`.toLowerCase().includes(q)) return false;
+        if (st && GF.show !== 'all') { const open = A.isUnlocked(it, st), p = A.progress(it, st); if (GF.show === 'have' && !open) return false; if (GF.show === 'need' && open) return false; if (GF.show === 'close' && (open || p < 0.75)) return false; }
+        return true;
+      });
+      n += items.length;
+      if (!items.length) return '';
+      return `<div class="gear-group"><h2>${esc(sl.name)} <small>${items.length} item${items.length === 1 ? '' : 's'}</small></h2><div class="gcat">${items.map(it => {
+        const r = rarityOf(it), open = st ? A.isUnlocked(it, st) : true, owners = it.free ? null : ms.filter(m => A.isUnlocked(it, state.stats[m.id])).length;
+        const mine = !st ? '' : it.free ? '<span class="mine">Starter item</span>' : open ? '<span class="mine"><span class="tick">✓</span> Unlocked</span>'
+          : `<span>${bigNum(Math.min(st[it.stat] || 0, it.need))}/${bigNum(it.need)}</span><span class="pbar"><i style="width:${Math.round(A.progress(it, st) * 100)}%"></i></span>`;
+        const fight = guildsOn ? [B.slotStatText(sl.id, it.rarity), B.itemBattleText(it.id)].filter(Boolean).join('. ') : '';
+        const own = owners == null ? (st ? '' : 'Everyone has it') : ms.length ? `${owners} of ${ms.length} players have it` : '';
+        return `<div class="gitem ${st && !open ? 'locked' : ''}" style="--rc:${r.color}">${iconTile(sl.id, it, base)}
+          <div><div class="rar">${r.name}</div><h3>${esc(it.name)}</h3><div class="how">${it.free ? 'Everyone starts with this.' : esc(A.requirement(it))}</div></div>
+          ${fight ? `<div class="fight"><b>In battle:</b> ${esc(fight)}</div>` : ''}
+          ${mine || own ? `<div class="foot">${mine || '<span></span>'}<span>${own}</span></div>` : ''}</div>`; }).join('')}</div></div>`;
+    }).join('');
+    box.innerHTML = `<p class="gear-count">${n} item${n === 1 ? '' : 's'}</p>` + (groups || `<div class="empty"><strong>No gear matches</strong>Try another slot, rarity or search word.</div>`);
+  }
+
+  const gearLink = () => `<div class="gpanel" style="margin-top:28px"><div><h3>See every item</h3><p>All ${A.SLOTS.reduce((n, sl) => n + sl.items.filter(i => i.id !== 'none' && !i.free).length, 0)} pieces of gear, how to unlock them and what they do in battle.</p></div><a class="btn" href="#gear">Open the Gear catalogue</a></div>`;
   function unlockList() {
     const base = { skin: 1, hair: 'short', hairColor: 1, tunic: 0, head: 'none', body: 'tunic', cape: 'none', weapon: 'training_sword', pet: 'none', aura: 'none' };
     return `<h2>Gear to unlock</h2><ul class="unlock-list">${A.SLOTS.flatMap(sl => sl.items.filter(i => !i.free).map(it =>
@@ -2485,8 +2578,8 @@
   }
 
   // ---------- routing ----------
-  const VIEWS = ['home', 'weekly', 'league', 'season', 'avatar', 'rules', 'register', 'calibrate', 'guilds', 'guild', 'fight', 'duel', 'admin']
-    .filter(v => (v !== 'admin' || selfLink) && (v !== 'league' || FEAT.league) && (v !== 'avatar' || FEAT.avatars) && (!['guilds', 'guild', 'fight', 'duel'].includes(v) || guildsOn));
+  const VIEWS = ['home', 'weekly', 'league', 'season', 'avatar', 'gear', 'rules', 'register', 'calibrate', 'guilds', 'guild', 'fight', 'duel', 'admin']
+    .filter(v => (v !== 'admin' || selfLink) && (v !== 'league' || FEAT.league) && (!['avatar', 'gear'].includes(v) || FEAT.avatars) && (!['guilds', 'guild', 'fight', 'duel'].includes(v) || guildsOn));
   function route() {
     const [h, arg] = location.hash.slice(1).split('/');
     if (h === 'join' && arg) { if (state.ready) handleJoinLink(arg); else state.pendingJoin = arg; return; }
@@ -2504,7 +2597,7 @@
   }
 
   function renderAll() {
-    renderBanner(); renderStatus(); renderHome(); renderWeekly(); if (FEAT.league) renderLeague(); renderSeason(); if (FEAT.avatars) renderAvatar(); renderRules(); renderRegister(); if (selfLink) renderAdmin(); renderCalibrate(); if (guildsOn) renderGuildViews(); route();
+    renderBanner(); renderStatus(); renderHome(); renderWeekly(); if (FEAT.league) renderLeague(); renderSeason(); if (FEAT.avatars) { renderAvatar(); renderGear(); } renderRules(); renderRegister(); if (selfLink) renderAdmin(); renderCalibrate(); if (guildsOn) renderGuildViews(); route();
   }
 
   // ---------- boot ----------
