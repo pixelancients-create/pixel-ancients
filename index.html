@@ -51,13 +51,13 @@
     position: sticky; top: 0; z-index: 20; background: rgba(5, 6, 6, .92); backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(255,255,255,.06);
   }
-  header.top .wrap { display: flex; align-items: center; gap: 28px; min-height: 68px; flex-wrap: wrap; }
+  header.top .wrap { display: flex; align-items: center; gap: 20px; min-height: 68px; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; text-decoration: none; color: var(--text); }
   .brand span { font: 800 22px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
   nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
   nav.tabs a {
-    color: var(--muted); text-decoration: none; padding: 10px 12px; font: 600 14px/1 var(--body);
-    letter-spacing: .14em; text-transform: uppercase; position: relative;
+    color: var(--muted); text-decoration: none; padding: 10px 10px; font: 600 14px/1 var(--body);
+    letter-spacing: .12em; text-transform: uppercase; position: relative;
   }
   nav.tabs a:hover { color: var(--text); }
   nav.tabs a[aria-current="page"] { color: #fff; }
@@ -74,6 +74,7 @@
   }
   .btn-red:hover, .join:hover { background: linear-gradient(180deg, #e8553e 0%, #b23222 100%); }
   .btn-red[disabled] { opacity: .35; cursor: default; }
+  .join { padding: 10px 16px; font-size: 12px; white-space: nowrap; }
 
   .btn {
     background: transparent; border: 1px solid var(--line); padding: 8px 14px; cursor: pointer; color: var(--text);
@@ -356,6 +357,10 @@
   .link-card .acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .link-msg { margin-top: 12px; min-height: 1.2em; } .link-msg.bad { color: var(--dire); } .link-msg.ok { color: var(--radiant); }
   .reg-hint { color: var(--muted); font-size: 14px; margin: 0; }
+  .discord-card { display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-top: 28px; padding: 18px 22px; background: linear-gradient(90deg, rgba(88, 101, 242, .14), rgba(21, 24, 26, .9) 70%); border: 1px solid rgba(88, 101, 242, .45); border-left: 3px solid #5865f2; }
+  .discord-card h3 { margin: 0 0 4px; font-size: 18px; }
+  .discord-card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .discord-card .btn-red { text-decoration: none; white-space: nowrap; }
   .gate .acts, .admin-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
   .admin-tools { margin: 28px 0 14px; }
   .gate .acts a, .admin-tools a { text-decoration: none; }
@@ -434,6 +439,14 @@
   footer.site { border-top: 1px solid var(--line); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
   footer.site .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
+  @media (max-width: 1110px) {   /* not enough room for logo + tabs + Discord button on one line: tabs get their own row */
+    header.top .wrap { gap: 10px; padding-top: 10px; padding-bottom: 6px; }
+    nav.tabs { width: calc(100% + 48px); margin: 0 -24px; padding: 0 20px; order: 3; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    nav.tabs::-webkit-scrollbar { display: none; }
+    nav.tabs a { flex: none; }
+    nav.tabs a[aria-current="page"]::after { bottom: -6px; }
+  }
+  @media (max-width: 480px) { .brand span { font-size: 18px; } .join .j-long { display: none; } }
   @media (max-width: 760px) {
     .hide-sm { display: none; }
     header.top .wrap { gap: 10px; padding-top: 10px; padding-bottom: 6px; }
@@ -566,7 +579,7 @@
       <a href="#rules">Rules</a>
       <a href="#register" id="navRegister">Register</a>
     </nav>
-    <a class="join" id="joinBtn" hidden>Join the Discord</a>
+    <a class="join" id="joinBtn" hidden><span class="j-long">Join&nbsp;</span>Discord</a>
   </div>
 </header>
 
@@ -1182,6 +1195,8 @@
         <p class="sub">Log in with Discord, then enter your Dota Friend ID once. Your ${esc(modesOr)} games count straight away, back to the start of the season.</p>
       </div>`;
     const steps = n => `<ol class="link-steps">${['Log in with Discord', 'Enter your Friend ID', "Confirm it's you"].map((t, i) => `<li class="${i < n ? 'done' : i === n ? 'now' : ''}"><span>${i < n ? '✓' : i + 1}</span>${t}</li>`).join('')}</ol>`;
+    const invite = CFG.discordInvite || '';
+    const discordCard = invite ? `<div class="discord-card"><div><h3>Join our Discord server</h3><p>Guild recruitment, Fight Night results and the weekly standings all happen there.</p></div><a class="btn-red" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a></div>` : '';
     const note = CFG.demo ? `<div class="banner">Preview: on the live site, players log in with Discord first. Try any Friend ID here. The check uses sample data and nothing is saved.</div>` : '';
     const me = joinedPlayer();
     let body;
@@ -1193,7 +1208,7 @@
       const played = (state.scored[me.id] || []).filter(e => e.counted).length;
       body = steps(3) + `<div class="gate"><h2>You're in, ${esc(me.name)}</h2>
         <p>Linked to Friend ID ${me.id}. ${played ? `${played} of your ${esc(modesOr)} games already count this season.` : `Your ${esc(modesOr)} games from this season count automatically, updated every hour.`}</p>
-        <div class="acts">${FEAT.avatars ? '<a class="btn-red" href="#avatar">Dress your avatar</a>' : ''}${guildsOn ? '<a class="btn" href="#guilds">Find a guild</a>' : ''}<a class="btn" href="#weekly">See the standings</a>${CFG.demo ? '<button class="btn" data-reg="again">Try another ID</button>' : '<button class="btn" data-reg="logout">Log out</button>'}</div></div>`;
+        <div class="acts">${FEAT.avatars ? '<a class="btn-red" href="#avatar">Dress your avatar</a>' : ''}${guildsOn ? '<a class="btn" href="#guilds">Find a guild</a>' : ''}${invite ? `<a class="btn" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : ''}<a class="btn" href="#weekly">See the standings</a>${CFG.demo ? '<button class="btn" data-reg="again">Try another ID</button>' : '<button class="btn" data-reg="logout">Log out</button>'}</div></div>`;
     } else {
       const L = R.look;
       let card = '';
@@ -1221,7 +1236,7 @@
         <p class="reg-hint">Your Friend ID is the number on your Dota 2 profile page, under your name.${CFG.demo ? '' : ` Logged in as ${esc(discordName())} on Discord. <button class="link" data-reg="logout">Log out</button>`}</p>
         ${card}`;
     }
-    view.innerHTML = hero + note + body;
+    view.innerHTML = hero + note + discordCard + body;
     wireJoin();
   }
 
@@ -1279,24 +1294,15 @@
         <p class="sub">Everyone who linked their own Dota account, newest first. If someone claimed an account that isn't theirs, unlink it and the real owner can link it again.</p>
       </div>`;
     const note = CFG.demo ? `<div class="banner">Preview: sample players, and unlinking here isn't saved.</div>` : '';
-    if (!CFG.demo && !state.session) { view.innerHTML = hero + `<div class="gate"><h2>Admins only</h2><p>Log in with Discord to continue.</p><div class="acts"><button class="btn-red" data-adm="login">Log in with Discord</button></div></div>`; return wireAdmin(); }
-    if (!CFG.demo && AD.isAdmin == null) {
-      if (location.hash.slice(1).split('/')[0] !== 'admin') { view.innerHTML = hero; return; }   // ask the database only when the page is opened
-      view.innerHTML = hero + `<div class="result">Checking your admin access…</div>`;
-      AD.isAdmin = false; AD.checking = true;
-      state.sb.rpc('is_league_admin').then(({ data }) => { AD.isAdmin = !!data; AD.checking = false; renderAdmin(); }, () => { AD.checking = false; renderAdmin(); });
+    // Only admins see this page. Everyone else (logged out, or not in league_admins) gets a plain "unavailable".
+    const unavailable = `<div class="hero compact"><div class="eyebrow">${esc(CFG.leagueName)}</div><h1>Unavailable</h1><p class="sub">This page isn't available.</p></div>`;
+    if (!CFG.demo && !state.session) { view.innerHTML = unavailable; return; }
+    if (!CFG.demo && (AD.isAdmin == null || AD.checking)) {
+      view.innerHTML = '';
+      if (AD.isAdmin == null && !AD.checking && location.hash.slice(1).split('/')[0] === 'admin') checkAdmin();   // ask the database only when needed
       return;
     }
-    if (AD.checking) return;
-    if (!CFG.demo && !AD.isAdmin) {
-      const did = myDiscordId() || '';
-      const sql = `insert into public.league_admins values ('${did}');`;
-      view.innerHTML = hero + `<div class="gate"><h2>You're not a league admin</h2>
-        <p>Your Discord ID is <b>${esc(did)}</b>. To make yourself an admin, run this once in Supabase › SQL Editor, then reload this page:</p>
-        <pre class="code">${esc(sql)}</pre>
-        <div class="acts"><button class="btn" data-adm="copy" data-text="${esc(sql)}">Copy</button><span id="admCopy" role="status"></span></div></div>`;
-      return wireAdmin();
-    }
+    if (!CFG.demo && !AD.isAdmin) { view.innerHTML = unavailable; return; }
     const rows = state.members.filter(m => CFG.demo || m.linked)
       .sort((a, b) => String(b.linkedAt || '').localeCompare(String(a.linkedAt || '')));
     const fromCfg = state.members.length - (CFG.demo ? state.members.length : rows.length);
@@ -1312,6 +1318,20 @@
         <td class="r"><button class="btn unlink" data-adm="unlink" data-id="${m.id}" data-d="${esc(m.discordId || '')}">Unlink</button></td></tr>`; }).join('')}
       </tbody></table>` : `<div class="empty"><strong>Nobody has linked yet.</strong> Share the Join page on your Discord.</div>`}`;
     wireAdmin();
+  }
+
+  async function checkAdmin() {
+    const AD = state.admin;
+    if (CFG.demo) { AD.isAdmin = true; } 
+    else if (!state.sb || !state.session) { AD.isAdmin = false; }
+    else {
+      AD.checking = true;
+      try { const { data, error } = await state.sb.rpc('is_league_admin'); AD.isAdmin = !error && data === true; }
+      catch { AD.isAdmin = false; }
+      AD.checking = false;
+    }
+    const l = $('#adminLink'); if (l) l.hidden = !AD.isAdmin;
+    renderAdmin();
   }
 
   function wireAdmin() {
@@ -1415,10 +1435,11 @@
     state.sb = window.supabase.createClient(AV.supabaseUrl, AV.supabaseAnonKey, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true } });
     const { data } = await state.sb.auth.getSession();
     state.session = data.session;
-    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) state.admin.isAdmin = null; if (!state.loading) { if (FEAT.avatars) renderAvatar(); renderRegister(); renderAdmin(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
+    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) { state.admin.isAdmin = null; checkAdmin(); } if (!state.loading) { if (FEAT.avatars) renderAvatar(); renderRegister(); renderAdmin(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
     if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
     if (state.session && store.get('returnToAvatar')) { store.set('returnToAvatar', null); location.hash = 'avatar'; }
     if (state.session && store.get('returnTo')) { const r = store.get('returnTo'); store.set('returnTo', null); location.hash = r; }
+    checkAdmin();
   }
 
   async function loadAvatars() {
@@ -2288,7 +2309,7 @@
     if (h === 'join' && arg) { if (state.ready) handleJoinLink(arg); else state.pendingJoin = arg; return; }
     const v = VIEWS.includes(h) ? h : 'home';
     if (guildsOn && ['guild', 'fight', 'duel'].includes(v) && state.ready && !state.loading) renderGuildViews();
-    if (v === 'admin' && !CFG.demo && state.admin.isAdmin == null && !state.admin.checking) renderAdmin();
+    if (v === 'admin' && !CFG.demo && state.admin.isAdmin == null && !state.admin.checking) checkAdmin();
     else if (arenaCtl && !['fight', 'duel'].includes(v)) { arenaCtl.stop(); arenaCtl = null; }
     VIEWS.forEach(n => $('#view-' + n).classList.toggle('active', n === v));
     document.querySelectorAll('nav.tabs a').forEach(a => {
@@ -2307,7 +2328,7 @@
   if (!FEAT.avatars) $('#view-avatar').remove();
   if (!guildsOn) ['guilds', 'guild', 'fight', 'duel'].forEach(v => $('#view-' + v).remove());
   if (!selfLink) $('#view-admin').remove();
-  else { $('#navRegister').textContent = 'Join'; $('#adminLink').hidden = false; }
+  else { $('#navRegister').textContent = 'Join'; if (CFG.demo) $('#adminLink').hidden = false; }
   document.title = CFG.leagueName;
   $('#leagueName').textContent = CFG.leagueName;
   if (CFG.discordInvite) { const j = $('#joinBtn'); j.href = CFG.discordInvite; j.hidden = false; j.target = '_blank'; j.rel = 'noopener'; }
