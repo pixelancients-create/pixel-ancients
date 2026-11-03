@@ -7,7 +7,7 @@
  */
 window.LEAGUE_CONFIG = {
   leagueName: 'Pixel Ancients',
-  discordInvite: '',                // e.g. 'https://discord.gg/yourcode' — shows a Join button when filled
+  discordInvite: 'https://discord.gg/qbFUqfJdgA',                // e.g. 'https://discord.gg/yourcode' — shows a Join button when filled
   // Home page explainer video (click to play). A file in the site or a YouTube link; '' hides the section.
   explainerVideo: 'media/pixel-ancients-promo-40s.mp4',
   explainerPoster: 'media/pixel-ancients-promo-poster.jpg',   // still shown before it plays (files only)
@@ -22,7 +22,7 @@ window.LEAGUE_CONFIG = {
 
   season: {
     name: 'Trial Season',
-    start: '2026-11-02',            // a Monday
+    start: '2026-11-09',            // a Monday
     weeks: 2,                       // regular weeks; a finals week follows
   },
 
@@ -64,8 +64,8 @@ window.LEAGUE_CONFIG = {
   // Optional: Discord login so players can dress their avatars (see README, "Avatars").
   // Leave empty and avatars still show, wearing each player's best unlocked gear.
   avatars: {
-    supabaseUrl: '',                // e.g. 'https://abcdefgh.supabase.co'
-    supabaseAnonKey: '',            // the project's public "anon" key (safe to publish)
+    supabaseUrl: 'https://fjwcveqejoxjpfpkjvfq.supabase.co',                // e.g. 'https://abcdefgh.supabase.co'
+    supabaseAnonKey: 'sb_publishable_r5K4nf4YP3JEpJUGsKTsVw_GDscYiDl',            // the project's public "anon" key (safe to publish)
   },
 
   // Taunts: the weekly top 3 show their avatar's taunt animation and a speech bubble.
