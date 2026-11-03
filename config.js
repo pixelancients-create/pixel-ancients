@@ -58,7 +58,7 @@ window.LEAGUE_CONFIG = {
   },
 
   registration: {
-    minTotalMatches: 100,           // anti-smurf rule
+    minTotalMatches: 80,           // anti-smurf rule
   },
 
   // Optional: Discord login so players can dress their avatars (see README, "Avatars").
