@@ -631,17 +631,44 @@
   }
 
   // Run one Fight Night from its snapshot. snapshot: { id, at, guilds: [{ id, name, tag, crest, members: [{ name, lo, pos, playerId }], runes }] }
-  const UNDERDOG = 0.75;                                         // weaker guild gets this x the power gap as +% attack and HP
+  const UNDERDOG = 0.35;                                         // weaker guild gets this x the power gap as +% attack and HP
+  // Fight Night matches are best of 3: first guild to win 2 rounds takes the match. Same frozen lineups every round,
+  // HP resets between rounds, the underdog bonus and runes apply each round, and each round has its own seed,
+  // so every visitor sees exactly the same rounds.
+  const ROUNDS_TO_WIN = 2;
+  const roundSeed = (base, n) => (n === 0 ? base : `${base}|r${n + 1}`);   // round 1 keeps the old single-fight seed
+  function playMatch(a, b, base, opts) {
+    const rounds = [], wins = [0, 0];
+    while (wins[0] < ROUNDS_TO_WIN && wins[1] < ROUNDS_TO_WIN) {
+      const res = simulate(a, b, roundSeed(base, rounds.length), opts);
+      rounds.push(res); wins[res.winner]++;
+    }
+    return { rounds, score: wins, winner: wins[0] > wins[1] ? 0 : 1 };
+  }
+  // MVP of the match: most damage + healing over all rounds, on the guild that won the match.
+  function matchMvp(m) {
+    const tot = {};
+    m.rounds.forEach(r => r.teams.forEach(t => t.units.forEach(u => { const x = tot[u.key] || (tot[u.key] = { key: u.key, name: u.name, v: 0 }); x.v += u.dealt + u.healed; })));
+    const side = m.winner === 0 ? 'a' : 'b';
+    return Object.values(tot).filter(x => x.key[0] === side).sort((x, y) => y.v - x.v || x.key.localeCompare(y.key))[0];
+  }
+  const fightOpts = (snapshot, b) => ({ underdog: b ? (snapshot.underdog == null ? UNDERDOG : snapshot.underdog) : 0 });
+
   function runFightNight(snapshot, recent = {}) {
     const eligible = snapshot.guilds.filter(g => (g.members || []).length >= (snapshot.minMembers || 3));
     const withPower = eligible.map(g => ({ ...g, power: teamPower(g) }));
     const pairs = pairGuilds(withPower, recent);
     return pairs.map(([a, b], i) => {
       const opp = b || guardianTeam(a.power);
-      const res = simulate(a, opp, `${snapshot.id}|${a.id}|${opp.id}`, { underdog: b ? (snapshot.underdog == null ? UNDERDOG : snapshot.underdog) : 0 });
-      return { fight: snapshot.id, at: snapshot.at, idx: i, a: a.id, b: b ? b.id : null, winner: res.winner, reason: res.reason, actions: res.actions,
-        power: [a.power, b ? b.power : Math.round(res.teams[1].power)], hpLeft: res.teams.map(t => t.hpLeft), mvp: res.mvp, underdog: res.teams.map(t => t.underdog),
-        mvpName: res.teams.flatMap(t => t.units).find(u => u.key === res.mvp).name };
+      const m = playMatch(a, opp, `${snapshot.id}|${a.id}|${opp.id}`, fightOpts(snapshot, b));
+      const first = m.rounds[0], mvp = matchMvp(m);
+      // enemy HP destroyed, averaged over the rounds played (a tiebreaker in the guild league)
+      const destroyed = [0, 1].map(s => m.rounds.reduce((x, r) => x + (1 - r.teams[1 - s].hpLeft), 0) / m.rounds.length);
+      return { fight: snapshot.id, at: snapshot.at, idx: i, a: a.id, b: b ? b.id : null, winner: m.winner, score: m.score,
+        rounds: m.rounds.map(r => ({ winner: r.winner, reason: r.reason, hpLeft: r.teams.map(t => t.hpLeft), actions: r.actions })),
+        reason: m.rounds[m.rounds.length - 1].reason, actions: m.rounds.reduce((x, r) => x + r.actions, 0),
+        power: [a.power, b ? b.power : Math.round(first.teams[1].power)], hpLeft: m.rounds[m.rounds.length - 1].teams.map(t => t.hpLeft), destroyed,
+        mvp: mvp.key, mvpName: mvp.name, underdog: first.teams.map(t => t.underdog) };
     });
   }
 
@@ -658,16 +685,16 @@
     return results;
   }
 
-  // Re-run one result for the replay viewer (exact same fight).
+  // Re-run one match for the replay viewer (exact same rounds): returns every round's full fight.
   function replay(snapshot, result) {
     const g = id => snapshot.guilds.find(x => x.id === id);
     const a = g(result.a), b = result.b ? g(result.b) : guardianTeam(teamPower(a));
-    return simulate(a, b, `${snapshot.id}|${a.id}|${b.id}`, { underdog: result.b ? (snapshot.underdog == null ? UNDERDOG : snapshot.underdog) : 0 });
+    return playMatch(a, b, `${snapshot.id}|${a.id}|${b.id}`, fightOpts(snapshot, result.b)).rounds;
   }
 
-  // Guild league: wins, then how much enemy HP was destroyed, then the power of opponents faced.
+  // Guild league: match wins, then round difference, then how much enemy HP was destroyed, then the power of opponents faced.
   function leagueTable(results, guilds) {
-    const row = id => rows[id] || (rows[id] = { id, w: 0, l: 0, played: 0, destroyed: 0, oppPower: 0, streak: '', last: [] });
+    const row = id => rows[id] || (rows[id] = { id, w: 0, l: 0, rw: 0, rl: 0, played: 0, destroyed: 0, oppPower: 0, streak: '', last: [] });
     const rows = {};
     guilds.forEach(g => row(g.id));
     for (const r of results) {
@@ -676,16 +703,19 @@
         if (!id) continue;
         const x = row(id), won = r.winner === s;
         x.played++; won ? x.w++ : x.l++;
-        x.destroyed += 1 - r.hpLeft[1 - s];
+        const sc = r.score || [r.winner === 0 ? 1 : 0, r.winner === 1 ? 1 : 0];
+        x.rw += sc[s]; x.rl += sc[1 - s];
+        x.destroyed += r.destroyed ? r.destroyed[s] : 1 - r.hpLeft[1 - s];
         x.oppPower += r.power[1 - s];
         x.last.push(won ? 'W' : 'L');
       }
     }
     const list = Object.values(rows).filter(x => guilds.some(g => g.id === x.id));
     list.forEach(x => { x.last = x.last.slice(-5); x.destroyedPct = x.played ? x.destroyed / x.played : 0; });
-    list.sort((a, b) => b.w - a.w || b.destroyed - a.destroyed || b.oppPower - a.oppPower || a.l - b.l);
+    // order: match wins, then rounds won minus rounds lost, then enemy HP destroyed, then the power of opponents faced
+    list.sort((a, b) => (b.played ? 1 : 0) - (a.played ? 1 : 0) || b.w - a.w || (b.rw - b.rl) - (a.rw - a.rl) || b.destroyed - a.destroyed || b.oppPower - a.oppPower || a.l - b.l);
     let prev = null, rnk = 0;
-    list.forEach((x, i) => { const k = `${x.w}|${x.destroyed.toFixed(4)}|${x.oppPower}`; if (k !== prev) { rnk = i + 1; prev = k; } x.rank = x.played ? rnk : null; });
+    list.forEach((x, i) => { const k = `${x.w}|${x.rw - x.rl}|${x.destroyed.toFixed(4)}|${x.oppPower}`; if (k !== prev) { rnk = i + 1; prev = k; } x.rank = x.played ? rnk : null; });
     return list;
   }
 
@@ -698,6 +728,6 @@
 
   return {
     ITEMS, RUNES, RARITY_PTS, BASE, BOT_POWER, ABILITY_TEXT, AURA_TEXT, itemBattleText, slotStatText, avatarPower, teamPower, makeUnit, buildTeam,
-    simulate, guardianTeam, UNDERDOG, fightTimes, fightId, pairGuilds, runFightNight, runSeason, replay, leagueTable, runesFor, seeded,
+    simulate, guardianTeam, UNDERDOG, ROUNDS_TO_WIN, playMatch, fightTimes, fightId, pairGuilds, runFightNight, runSeason, replay, leagueTable, runesFor, seeded,
   };
 });

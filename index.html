@@ -573,6 +573,17 @@
   .fight-line:hover { border-color: var(--red-hot); }
   .fight-line .side.right { justify-self: end; }
   .fight-line .vs { color: var(--gold); font: 800 13px var(--display); }
+  .fight-line .vs.score { font-size: 17px; letter-spacing: .06em; }
+  .round-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0 10px; }
+  .round-tabs .lbl { color: var(--muted); font: 600 11.5px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; margin-right: 4px; }
+  .round-tabs button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+  .arena-stage { position: relative; max-width: 960px; }
+  .round-card { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; background: rgba(8,9,10,.72); animation: rcard 1.7s ease forwards; }
+  .round-card b { display: block; font: 800 clamp(22px, 5vw, 44px)/1 var(--display); color: var(--gold); letter-spacing: .1em; text-shadow: 0 0 18px rgba(216,178,92,.55); }
+  .round-card span { display: block; margin-top: 8px; color: var(--text); font: 700 clamp(12px, 2vw, 16px)/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; }
+  @keyframes rcard { 0% { opacity: 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+  @media (prefers-reduced-motion: reduce) { .round-card { display: none; } }
+  @media (max-width: 480px) { .round-tabs { gap: 6px; } .round-tabs .lbl { display: none; } .round-tabs .btn { padding: 8px 11px; } }
   .fight-line .meta { grid-column: 1 / -1; color: var(--muted); font-size: 13px; }
   .guild-hero { display: flex; gap: 22px; align-items: center; }
   .tag.cap { border-color: rgba(216,178,92,.55); color: var(--gold); }
@@ -1119,18 +1130,19 @@
           ${FEAT.league ? '' : `<li>Most total Weekly Points across all ${CFG.season.weeks} weeks of the season is ${guildsOn ? 'Season MVP' : 'Season Champion'}.</li>`}
         </ul>
         ${guildsOn ? `<h2>Guilds and Fight Night</h2>
-        <p>Form a guild of up to 5 players. Every ${esc(fightWhen)} (league time), each guild's pixel avatars fight another guild automatically. Nobody needs to be online.</p>
+        <p>Form a guild of up to 5 players. Every ${esc(fightWhen)} (league time), each guild's pixel avatars play a best-of-3 match against another guild automatically. Nobody needs to be online.</p>
         <ul>
           <li>Create a guild on the Guilds page. Players join with the captain's invite link, or send a request the captain accepts.</li>
           <li>At Fight Night, rosters and gear lock. Your avatar fights with the gear it's wearing (your best gear if you never saved a look). Every item gives battle stats, and higher rarities add abilities.</li>
+          <li>Every match is best of 3: the first guild to win 2 rounds takes the match. HP resets between rounds; lineups, gear, runes and the Underdog bonus stay the same.</li>
           <li>Guilds are paired with the guild closest in power, avoiding an immediate rematch. An odd guild out fights the Ancient Guardians, geared to match its power.</li>
           <li>The weaker guild in a pairing gets an Underdog bonus: ${Math.round(GCFG.underdog * 100)}% of the power gap as extra attack and HP (up to 40%).</li>
           <li>Last week's Weekly Points top 3 give their guild a rune for that weekend's fights: Double Damage (1st), Haste (2nd), Regeneration (3rd).</li>
           <li>Positions 1–2 are the front line, 3–5 the back line. Melee attackers must get through the front line first; ranged and magic attackers can hit anyone.</li>
           <li>A guild needs ${GCFG.minMembers} members to fight. Empty slots are filled by Lane Creeps.</li>
           ${GCFG.switchCooldown ? '<li>If you leave a guild, you can join another straight away but sit out its fights until the following Monday.</li>' : ''}
-          <li>Season Champion is the guild with the most wins. Ties go to the most enemy HP destroyed, then the strongest opponents faced.</li>
-          <li>Every fight is seeded, so anyone can replay it and see exactly the same battle.</li>
+          <li>Season Champion is the guild with the most match wins. Ties go to round difference (rounds won minus rounds lost), then the most enemy HP destroyed, then the strongest opponents faced.</li>
+          <li>Every round is seeded, so anyone can replay it and see exactly the same battle.</li>
         </ul>` : ''}
         ${FEAT.league ? `<h2>League ELO</h2>
         <p>Only community lobby matches count. Everyone starts the season at ${e.start}. After each match, every player on a team moves by the same amount, based on the two teams' average ratings: beating a stronger team earns more.</p>
@@ -1795,7 +1807,7 @@
 
   // ===================== Guilds & Fight Night =====================
   const B = window.LeagueBattle;
-  const GCFG = Object.assign({ fightDays: [6, 0], fightHour: 21, minMembers: 3, underdog: 0.75, switchCooldown: true }, CFG.guilds || {});
+  const GCFG = Object.assign({ fightDays: [6, 0], fightHour: 21, minMembers: 3, underdog: 0.35, switchCooldown: true }, CFG.guilds || {});
   const guildsOn = !!(FEAT.guilds && FEAT.avatars && B && window.LeagueArena);
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const fmtHour = h => `${((h + 11) % 12) + 1}${h < 12 ? 'am' : 'pm'}`;
@@ -1999,9 +2011,9 @@
     const tagA = r.winner === 0 ? 'W' : 'L', tagB = r.winner === 1 ? 'W' : 'L';
     return `<a class="fight-line" href="#fight/${r.fight}/${r.idx}">
       <span class="side">${guildLabel(a, 24)} <b class="res ${tagA}">${tagA}</b></span>
-      <span class="vs">vs</span>
+      <span class="vs${r.score ? ' score' : ''}">${r.score ? r.score.join('–') : 'vs'}</span>
       <span class="side right"><b class="res ${tagB}">${tagB}</b> ${guildLabel(b, 24)}</span>
-      <span class="meta">MVP ${esc(r.mvpName)}${r.underdog && (r.underdog[0] || r.underdog[1]) ? ` · underdog +${Math.max(...r.underdog)}%` : ''} · Watch ›</span></a>`;
+      <span class="meta">MVP ${esc(r.mvpName)}${r.rounds && r.rounds.length === 3 ? ' · went to 3 rounds' : ''}${r.underdog && (r.underdog[0] || r.underdog[1]) ? ` · underdog +${Math.max(...r.underdog)}%` : ''} · Watch ›</span></a>`;
   }
   function gGate() {
     if (!CFG.demo && !loginEnabled) return '<div class="gate empty"><strong>Guilds need the Discord login</strong>An admin needs to connect Discord login and run the guild part of supabase/schema.sql (see README.md).</div>';
@@ -2023,7 +2035,7 @@
         <div class="eyebrow">Fight Night · ${esc(fightWhen)}</div>
         <h1>Guilds</h1>
         <p class="tagline">${next ? `Next Fight Night: ${fmtDateTime(next)}` : 'The season\'s Fight Nights are done.'}</p>
-        <p class="sub">Team up with up to 5 players. Your pixel avatars fight another guild of similar power every Fight Night, automatically, with the gear you've unlocked. Best record at the end of the season is Season Champion.</p>
+        <p class="sub">Team up with up to 5 players. Your pixel avatars fight a best-of-3 match against a guild of similar power every Fight Night, automatically, with the gear you've unlocked. Best record at the end of the season is Season Champion.</p>
       </div>`;
     const me = CFG.demo ? lockerPlayer() : (state.session ? lockerPlayer() : null);
     const mine = myGuild();
@@ -2051,8 +2063,8 @@
       <div class="fight-list">${resultsOf(last).map(resultLine).join('')}</div>` : '';
     const tableBlock = table.length ? `
       <div class="section-head"><div><div class="eyebrow">${esc(CFG.season.name)} · best record wins</div><h2>Guild league</h2></div></div>
-      <table class="table gtable"><thead><tr><th>#</th><th>Guild</th><th class="r">W–L</th><th class="r hide-sm">Enemy HP destroyed</th><th class="r hide-sm">Last 5</th></tr></thead><tbody>
-      ${table.map(r => { const g = guildInfo(r.id); return `<tr><td class="rank num ${r.rank && r.rank <= 3 ? 'top' : ''}">${r.rank || '–'}</td><td><a class="plain" href="#guild/${r.id}">${guildLabel(g)}</a></td><td class="r num"><span class="w">${r.w}</span>–<span class="l">${r.l}</span></td><td class="r num hide-sm">${r.played ? Math.round(r.destroyedPct * 100) + '%' : '–'}</td><td class="r hide-sm">${r.last.map(x => `<span class="res ${x}">${x}</span>`).join('')}</td></tr>`; }).join('')}
+      <table class="table gtable"><thead><tr><th>#</th><th>Guild</th><th class="r">W–L</th><th class="r hide-sm">Rounds</th><th class="r hide-sm">Enemy HP destroyed</th><th class="r hide-sm">Last 5</th></tr></thead><tbody>
+      ${table.map(r => { const g = guildInfo(r.id); return `<tr><td class="rank num ${r.rank && r.rank <= 3 ? 'top' : ''}">${r.rank || '–'}</td><td><a class="plain" href="#guild/${r.id}">${guildLabel(g)}</a></td><td class="r num"><span class="w">${r.w}</span>–<span class="l">${r.l}</span></td><td class="r num hide-sm">${r.played ? `${r.rw}–${r.rl}` : '–'}</td><td class="r num hide-sm">${r.played ? Math.round(r.destroyedPct * 100) + '%' : '–'}</td><td class="r hide-sm">${r.last.map(x => `<span class="res ${x}">${x}</span>`).join('')}</td></tr>`; }).join('')}
       </tbody></table>` : '';
     const cards = state.guilds.slice().sort((a, b) => guildPower(b) - guildPower(a)).map(g => {
       const rec = recordOf(g.id), requested = state.gReq.some(r => r.guild_id === g.id && r.discord_id === meDid());
@@ -2151,19 +2163,40 @@
     if (arenaCtl) { arenaCtl.stop(); arenaCtl = null; }
     const snap = state.fightSnaps[fid], r = state.fights.find(x => x.fight === fid && x.idx === Number(idx));
     if (!snap || !r) { view.innerHTML = `<div class="hero compact"><div class="eyebrow">Fight Night</div><h1>Fight not found</h1><p class="tagline"><a href="#guilds">Back to Guilds</a></p></div>`; return; }
-    const res = B.replay(snap, r);
-    const a = guildInfo(r.a), b = guildInfo(r.b);
-    const rows = res.teams.flatMap((t, ti) => t.units.map(u => ({ ...u, team: ti }))).sort((x, y) => (y.dealt + y.healed) - (x.dealt + x.healed));
+    const rounds = B.replay(snap, r);
+    const a = guildInfo(r.a), b = guildInfo(r.b), names = rounds[0].teams.map(t => t.name);
+    const score = [0, 0], after = rounds.map(x => { score[x.winner]++; return score.slice(); });
+    const fin = after[after.length - 1], wName = names[r.winner];
+    // fighter totals over the whole match
+    const tot = {};
+    rounds.forEach(x => x.teams.forEach((t, ti) => t.units.forEach(u => { const o = tot[u.key] || (tot[u.key] = { key: u.key, name: u.name, pet: u.pet, team: ti, dealt: 0, healed: 0, kills: 0 }); o.dealt += u.dealt; o.healed += u.healed; o.kills += u.kills; })));
+    const rows = Object.values(tot).sort((x, y) => (y.dealt + y.healed) - (x.dealt + x.healed));
     view.innerHTML = `
-      <div class="hero compact"><div class="eyebrow">Fight Night · ${fmtDateTime(r.at)}</div>
+      <div class="hero compact"><div class="eyebrow">Fight Night · ${fmtDateTime(r.at)} · best of 3</div>
         <h1 class="long">${esc(a.name)} vs ${esc(b.name)}</h1>
-        <p class="tagline">${esc(res.teams[res.winner].name)} won${res.reason === 'time' ? ' on HP left' : ''} · MVP ${esc(r.mvpName)}</p></div>
+        <p class="tagline">${esc(wName)} won ${Math.max(...fin)}–${Math.min(...fin)} · MVP ${esc(r.mvpName)}</p></div>
+      <div class="round-tabs" role="group" aria-label="Rounds"><span class="lbl">Watch</span>${rounds.map((x, i) => `<button class="btn" data-round="${i}" aria-pressed="${i === 0}">Round ${i + 1}</button>`).join('')}</div>
       <div class="arena" id="fightArena"></div>
-      <div class="section-head"><div><div class="eyebrow">Who did what</div><h2>Fight stats</h2></div><div class="status" style="margin:0"><span id="fCopyMsg" role="status"></span><button class="btn" data-g="copyfight">Copy link</button></div></div>
-      <table class="table"><thead><tr><th>Fighter</th><th>Guild</th><th class="r">Damage</th><th class="r hide-sm">Healing</th><th class="r">Kills</th><th class="r hide-sm">HP left</th></tr></thead><tbody>
-      ${rows.map(u => `<tr><td>${esc(u.name)}${u.key === res.mvp ? ' <span class="tag cap">MVP</span>' : ''}${u.pet ? ` <span class="petnote">+ ${esc(u.pet)}</span>` : ''}</td><td>${esc(res.teams[u.team].name)}</td><td class="r num">${u.dealt}</td><td class="r num hide-sm">${u.healed}</td><td class="r num">${u.kills}</td><td class="r num hide-sm">${u.hp ? Math.round(u.hp / u.maxHp * 100) + '%' : 'KO'}</td></tr>`).join('')}
+      <div class="section-head"><div><div class="eyebrow">Who did what · all rounds</div><h2>Fight stats</h2></div><div class="status" style="margin:0"><span id="fCopyMsg" role="status"></span><button class="btn" data-g="copyfight">Copy link</button></div></div>
+      <table class="table"><thead><tr><th>Fighter</th><th>Guild</th><th class="r">Damage</th><th class="r hide-sm">Healing</th><th class="r">Kills</th></tr></thead><tbody>
+      ${rows.map(u => `<tr><td>${esc(u.name)}${u.key === r.mvp ? ' <span class="tag cap">MVP</span>' : ''}${u.pet ? ` <span class="petnote">+ ${esc(u.pet)}</span>` : ''}</td><td>${esc(names[u.team])}</td><td class="r num">${u.dealt}</td><td class="r num hide-sm">${u.healed}</td><td class="r num">${u.kills}</td></tr>`).join('')}
       </tbody></table>`;
-    arenaCtl = window.LeagueArena.mount($('#fightArena'), res, { fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}` });
+    const tabs = [...view.querySelectorAll('.round-tabs [data-round]')];
+    // play round i; when it ends, the next round starts by itself (same speed)
+    const play = (i, speed) => {
+      if (arenaCtl) arenaCtl.stop();
+      tabs.forEach((t, k) => t.setAttribute('aria-pressed', String(k === i)));
+      const x = rounds[i], last = i === rounds.length - 1, sc = after[i];
+      const hp = x.reason === 'time' ? ' · on HP left' : '';
+      const opts = { fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}-round${i + 1}`, speed,
+        endTitle: last ? 'VICTORY' : `ROUND ${i + 1}`,
+        endSub: last ? `${wName} wins ${Math.max(...sc)}–${Math.min(...sc)}${hp}` : `${names[x.winner]} takes it${hp} · ${sc[0]}–${sc[1]}`,
+        onEnd: last ? null : () => setTimeout(() => { if (arenaCtl === ctl && view.classList.contains('active')) play(i + 1, ctl.speed()); }, 900) };
+      const ctl = arenaCtl = window.LeagueArena.mount($('#fightArena'), x, opts);
+      if (i > 0) { const st = $('#fightArena .arena-stage'); if (st) st.insertAdjacentHTML('beforeend', `<div class="round-card" aria-hidden="true"><b>Round ${i + 1}</b><span>${esc(guildTag(a))} ${after[i - 1][0]}–${after[i - 1][1]} ${esc(guildTag(b))}</span></div>`); }
+    };
+    tabs.forEach((t, i) => { t.onclick = () => play(i, arenaCtl && arenaCtl.speed ? arenaCtl.speed() : 1); });
+    play(0, 1);
   }
 
   // ---- duel sandbox ----
@@ -2228,11 +2261,12 @@
     const lines = [`**${CFG.leagueName} — Fight Night (${fmtDateTime(list[0].at)})**`, ''];
     list.forEach(r => {
       const a = guildInfo(r.a), b = guildInfo(r.b), w = r.winner === 0 ? a : b, l = r.winner === 0 ? b : a;
-      lines.push(`⚔️ **[${guildTag(w)}] ${w.name}** beat [${guildTag(l)}] ${l.name} · MVP ${r.mvpName}`);
+      const sc = r.score ? ` **${Math.max(...r.score)}–${Math.min(...r.score)}**` : '';
+      lines.push(`⚔️ **[${guildTag(w)}] ${w.name}** beat [${guildTag(l)}] ${l.name}${sc} · MVP ${r.mvpName}`);
       lines.push(`   Replay: ${base}#fight/${r.fight}/${r.idx}`);
     });
     const top = guildLeague().filter(r => r.played).slice(0, 3);
-    if (top.length) { lines.push('', '🏆 **League**'); top.forEach(r => { const g = guildInfo(r.id); lines.push(`${r.rank}. [${guildTag(g)}] ${g.name} — ${r.w}W ${r.l}L`); }); }
+    if (top.length) { lines.push('', '🏆 **League**'); top.forEach(r => { const g = guildInfo(r.id); lines.push(`${r.rank}. [${guildTag(g)}] ${g.name} — ${r.w}W ${r.l}L (rounds ${r.rw}–${r.rl})`); }); }
     const nx = nextFight(); if (nx) lines.push('', `Next Fight Night: ${fmtDateTime(nx)}`);
     const msg = $('#gCopyMsg');
     try { await navigator.clipboard.writeText(lines.join('\n')); if (msg) msg.textContent = 'Copied. Paste it in Discord.'; }

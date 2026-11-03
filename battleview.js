@@ -400,8 +400,8 @@
     const p = Math.min(1, (now - sc.endT - 500) / 400); if (p <= 0) return;
     const w = sc.result.teams[sc.result.winner];
     ctx.globalAlpha = p * 0.85; ctx.fillStyle = '#0c0d0e'; ctx.fillRect(0, 124, W, 54); ctx.globalAlpha = p;
-    text(ctx, 'VICTORY', W / 2, 140, '#e2b957', 18, 'center', 900);
-    text(ctx, w.name + (sc.result.reason === 'time' ? ' · won on HP left' : ''), W / 2, 162, '#f4efe6', 11, 'center', 700);
+    text(ctx, sc.endTitle || 'VICTORY', W / 2, 140, '#e2b957', 18, 'center', 900);
+    text(ctx, sc.endSub || (w.name + (sc.result.reason === 'time' ? ' · won on HP left' : '')), W / 2, 162, '#f4efe6', 11, 'center', 700);
     ctx.globalAlpha = 1;
   }
   function draw(ctx, sc, now) {
@@ -424,7 +424,7 @@
       <div class="arena-stage"><canvas width="${W}" height="${H}"></canvas></div>
       <div class="arena-bar">
         <button class="btn" data-a="play">Pause</button>
-        <button class="btn" data-a="speed">Speed 1x</button>
+        <button class="btn" data-a="speed">Speed ${[1, 2, 4].includes(opts.speed) ? opts.speed : 1}x</button>
         <button class="btn" data-a="skip">Skip to end</button>
         <button class="btn" data-a="restart">Replay</button>
         ${opts.gif === false ? '' : '<button class="btn" data-a="gif">Download GIF clip</button>'}
@@ -434,7 +434,9 @@
       </div>`;
     const cv = el.querySelector('canvas'), ctx = cv.getContext('2d');
     ctx.imageSmoothingEnabled = false;
-    let sc = makeScene(result), t = 0, speed = 1, playing = opts.autoplay !== false, lastFrame = 0, raf = 0, dead = false;
+    // opts.endTitle / opts.endSub replace the "VICTORY" banner (used for best-of-3 rounds); opts.speed carries the speed across rounds
+    const titled = s => { if (opts.endTitle) s.endTitle = opts.endTitle; if (opts.endSub) s.endSub = opts.endSub; return s; };
+    let sc = titled(makeScene(result)), t = 0, speed = [1, 2, 4].includes(opts.speed) ? opts.speed : 1, playing = opts.autoplay !== false, lastFrame = 0, raf = 0, dead = false;
     // ---- sound: on by default, mute + volume remembered on this device ----
     const SFX = root.PixelSFX, keep = { get(k, d) { try { const v = localStorage.getItem('pa:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('pa:' + k, JSON.stringify(v)); } catch {} } };
     const sndBtn = el.querySelector('[data-a="sound"]'), volIn = el.querySelector('.arena-vol');
@@ -480,7 +482,7 @@
       if (act === 'play') { if (!sc.ended) playing = !playing; setBtn(); }
       if (act === 'speed') { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; a.textContent = `Speed ${speed}x`; }
       if (act === 'skip') { const f = sc.sfx; sc.sfx = null; t = sc.steps.length * STEP + 600; advance(sc, t); sc.sfx = f; sc.floaters = []; sc.shots = []; sc.shouts = []; }
-      if (act === 'restart') { sc = live(makeScene(result)); t = 0; playing = true; setBtn(); if (MUS) { MUS.stop(); track = pickTrack(); } }
+      if (act === 'restart') { sc = live(titled(makeScene(result))); t = 0; playing = true; setBtn(); if (MUS) { MUS.stop(); track = pickTrack(); } }
       if (act === 'music' && MUS) { MUS.unlock(); MUS.setMuted(!MUS.muted); keep.set('musicMuted', MUS.muted); syncSound(); }
       if (act === 'sound' && SFX) { SFX.unlock(); SFX.setMuted(!SFX.muted); keep.set('sfxMuted', SFX.muted); syncSound(); if (!SFX.muted) SFX.play('pet'); }
       if (act === 'gif') {
@@ -505,14 +507,14 @@
       }
     };
     raf = requestAnimationFrame(loop);
-    return { stop() { dead = true; cancelAnimationFrame(raf); if (MUS) MUS.stop(); }, scene: () => sc, time: () => t };
+    return { stop() { dead = true; cancelAnimationFrame(raf); if (MUS) MUS.stop(); }, scene: () => sc, time: () => t, speed: () => speed };
   }
 
   // ---------- GIF clip of the finish ----------
   // Renders the last ~12 actions plus the victory screen at 12 fps and encodes a GIF in the browser.
   function gifClip(result, opts = {}) {
     const fps = 12, speed = 1.6, scale = opts.gifScale || 1;
-    const sc = makeScene(result);
+    const sc = makeScene(result); if (opts.endTitle) sc.endTitle = opts.endTitle; if (opts.endSub) sc.endSub = opts.endSub;
     const total = sc.steps.length;
     const startStep = Math.max(1, total - (opts.gifSteps || 12));
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
