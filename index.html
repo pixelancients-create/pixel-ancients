@@ -1175,7 +1175,7 @@
   function lookChecks(L) {
     const min = CFG.registration.minTotalMatches;
     return [
-      [!!L.lastGame, L.lastGame ? `Match data is public (last game ${fmtDateTime(L.lastGame)})` : 'No visible matches. Turn on Expose Public Match Data in Dota 2 (Settings › Options › Social), play one game, then try again.'],
+      [!!L.lastGame, L.lastGame ? `Match data is public (last game ${fmtDateTime(L.lastGame)})` : 'No visible matches. Turn on Expose Public Match Data in Dota 2 (Settings › Social › Options), play one game, then try again.'],
       [L.total >= min, `${L.total} total matches (needs ${min})`],
       [!L.taken, L.taken ? 'Already linked to another player. If it\'s yours, ask an admin on Discord.' : 'Not linked to anyone yet'],
     ];
