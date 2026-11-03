@@ -75,6 +75,14 @@
   .btn-red:hover, .join:hover { background: linear-gradient(180deg, #e8553e 0%, #b23222 100%); }
   .btn-red[disabled] { opacity: .35; cursor: default; }
   .join { padding: 10px 16px; font-size: 12px; white-space: nowrap; }
+  .hdr-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+  .hdr-actions [hidden] { display: none !important; }
+  /* Discord: a quiet outlined button, so Register stays the one red call to action */
+  .dc-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.16); color: #b9b3aa; font: 600 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+  .dc-ghost:hover { color: var(--text); border-color: rgba(255,255,255,.35); }
+  .dc-ghost svg { width: 15px; height: 15px; fill: currentColor; opacity: .85; flex: none; }
+  .dc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14.5px; }
+  .dc-row b { color: var(--text); font-weight: 600; }
 
   .btn {
     background: transparent; border: 1px solid var(--line); padding: 8px 14px; cursor: pointer; color: var(--text);
@@ -465,7 +473,9 @@
     nav.tabs a { flex: none; }
     nav.tabs a[aria-current="page"]::after { bottom: -6px; }
   }
-  @media (max-width: 480px) { .brand span { font-size: 18px; } .join .j-long { display: none; } }
+  @media (max-width: 560px) { .hdr-actions .dc-ghost { display: none; } }   /* phones: Discord moves to the Register page and footer */
+  @media (max-width: 480px) { .brand span { font-size: 18px; } }
+  @media (max-width: 400px) { .brand { gap: 8px; } .brand span { font-size: 16px; letter-spacing: .05em; } .hdr-actions .join { padding: 9px 12px; } }
   @media (max-width: 760px) {
     .hide-sm { display: none; }
     header.top .wrap { gap: 10px; padding-top: 10px; padding-bottom: 6px; }
@@ -545,6 +555,19 @@
   .res.W { color: var(--radiant); border-color: rgba(143,200,79,.45); }
   .res.L { color: var(--dire); border-color: rgba(214,73,58,.45); }
   .fight-list { display: grid; gap: 8px; }
+  /* Duel sandbox teaser on the Guilds page: gold, so it stands out without competing with the red Register button */
+  .duel-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px 32px; margin: 40px 0 8px; padding: 22px 26px;
+    background: linear-gradient(100deg, rgba(216,178,92,.10), rgba(21,24,26,.95) 55%), var(--panel); border: 1px solid rgba(216,178,92,.35); border-left: 3px solid var(--gold); }
+  .duel-card .eyebrow { color: var(--gold); }
+  .duel-card h3 { margin: 6px 0; font: 800 26px/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; }
+  .duel-card p { margin: 0 0 16px; color: var(--muted); max-width: 560px; font-size: 15px; line-height: 1.5; }
+  .duel-card .go { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 11px 18px; border: 1px solid var(--gold); color: var(--gold); font: 700 13px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; background: rgba(216,178,92,.08); }
+  .duel-card .go:hover, .duel-card .go:focus-visible { background: rgba(216,178,92,.18); color: #f1d48a; }
+  .duel-card .vsbox { display: flex; align-items: flex-end; gap: 10px; }
+  .duel-card .vsbox img { width: 96px; height: 96px; image-rendering: pixelated; }
+  .duel-card .vsbox img.r { transform: scaleX(-1); }
+  .duel-card .vsbox .vs { font: 800 22px/1 var(--display); color: var(--gold); padding-bottom: 36px; text-shadow: 0 0 14px rgba(216,178,92,.6); }
+  @media (max-width: 640px) { .duel-card { grid-template-columns: 1fr; padding: 18px; } .duel-card .vsbox { order: -1; justify-content: center; } .duel-card .vsbox img { width: 72px; height: 72px; } .duel-card .vsbox .vs { padding-bottom: 26px; } .duel-card .eyebrow .more { display: none; } }
   .fight-list .when { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .fight-line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); background: var(--panel); color: inherit; text-decoration: none; }
   .fight-line:hover { border-color: var(--red-hot); }
@@ -598,7 +621,10 @@
       <a href="#rules">Rules</a>
       <a href="#register" id="navRegister">Register</a>
     </nav>
-    <a class="join" id="joinBtn" hidden><span class="j-long">Join&nbsp;</span>Discord</a>
+    <div class="hdr-actions">
+      <a class="dc-ghost" id="joinBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5.3A17 17 0 0 0 15.8 4l-.5 1.1a15.6 15.6 0 0 0-4.6 0L10.2 4A17 17 0 0 0 6 5.3 17.6 17.6 0 0 0 3 17.2a17 17 0 0 0 5.1 2.6l1.1-1.8a11 11 0 0 1-1.7-.8l.4-.3a12.2 12.2 0 0 0 10.4 0l.4.3a11 11 0 0 1-1.7.8l1.1 1.8a17 17 0 0 0 5.1-2.6A17.5 17.5 0 0 0 20 5.3ZM9.3 14.8c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm5.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg><span>Discord</span></a>
+      <a class="join" id="ctaBtn" href="#register" hidden>Register</a>
+    </div>
   </div>
 </header>
 
@@ -623,7 +649,7 @@
 <footer class="site">
   <div class="wrap">
     <span>A fan-run community league. Not affiliated with or endorsed by Valve.</span>
-    <span>Match data from <a href="https://www.opendota.com" target="_blank" rel="noopener">OpenDota</a><span id="adminLink" hidden> · <a href="#admin">Admin</a></span></span>
+    <span>Match data from <a href="https://www.opendota.com" target="_blank" rel="noopener">OpenDota</a><span id="footDiscord" hidden> · <a target="_blank" rel="noopener">Discord</a></span><span id="adminLink" hidden> · <a href="#admin">Admin</a></span></span>
   </div>
 </footer>
 
@@ -845,7 +871,7 @@
   function renderBanner() {
     const parts = [];
     if (CFG.demo) parts.push('You\'re looking at sample data with made-up players. Set <code>demo: false</code> in config.js and add real players to go live.');
-    if (!CFG.demo && !state.members.length) parts.push(selfLink ? 'No players yet. Players join from the <a href="#register">Join</a> page: log in with Discord, then enter a Friend ID.' : 'No players yet. Use the Register page to check an account, then add it to config.js.');
+    if (!CFG.demo && !state.members.length) parts.push(selfLink ? 'No players yet. Players sign up on the <a href="#register">Register</a> page: log in with Discord, then enter a Friend ID.' : 'No players yet. Use the Register page to check an account, then add it to config.js.');
     state.errors.slice(0, 4).forEach(e => parts.push(esc(e)));
     $('#banner').innerHTML = parts.map(p => `<div class="banner">${p}</div>`).join('');
   }
@@ -1122,7 +1148,7 @@
         <ul>
           <li>In Dota 2, turn on Settings › Options › Social › Expose Public Match Data.</li>
           <li>Have at least ${CFG.registration.minTotalMatches} total matches.</li>
-          <li>${selfLink ? 'Go to the <a href="#register">Join</a> page, log in with Discord and enter your Friend ID. That\'s it.' : 'Post your Friend ID in #register on Discord.'}</li>
+          <li>${selfLink ? 'Go to the <a href="#register">Register</a> page, log in with Discord and enter your Friend ID. That\'s it.' : 'Post your Friend ID in #register on Discord.'}</li>
         </ul>
       </div>`;
   }
@@ -1205,17 +1231,28 @@
     return state.session ? lockerPlayer() : null;
   }
 
+  // Header call to action: Register until you've linked an account, then a shortcut to your avatar.
+  function syncCta() {
+    const b = $('#ctaBtn'); if (!b) return;
+    if (!selfLink) { b.hidden = true; return; }
+    const me = state.ready ? joinedPlayer() : null;
+    const to = me ? (FEAT.avatars ? ['#avatar', 'My avatar'] : ['#weekly', 'My standings']) : ['#register', 'Register'];
+    b.setAttribute('href', to[0]); b.textContent = to[1]; b.hidden = false;
+    const cur = (location.hash.slice(1).split('/')[0] || 'home');
+    if ('#' + cur === to[0]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  }
+
   function renderJoin() {
     const view = $('#view-register'), R = state.reg;
     const hero = `
       <div class="hero compact">
-        <div class="eyebrow">Link your Dota account</div>
-        <h1>Join</h1>
+        <div class="eyebrow">Join the league</div>
+        <h1>Register</h1>
         <p class="sub">Log in with Discord, then enter your Dota Friend ID once. Your ${esc(modesOr)} games count straight away, back to the start of the season.</p>
       </div>`;
     const steps = n => `<ol class="link-steps">${['Log in with Discord', 'Enter your Friend ID', "Confirm it's you"].map((t, i) => `<li class="${i < n ? 'done' : i === n ? 'now' : ''}"><span>${i < n ? '✓' : i + 1}</span>${t}</li>`).join('')}</ol>`;
     const invite = CFG.discordInvite || '';
-    const discordCard = invite ? `<div class="discord-card"><div><h3>Join our Discord server</h3><p>Guild recruitment, Fight Night results and the weekly standings all happen there.</p></div><a class="btn-red" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a></div>` : '';
+    const discordRow = invite ? `<div class="dc-row"><span><b>Not on our Discord yet?</b> Guild recruitment, Fight Night results and the weekly standings are posted there.</span><a class="dc-ghost" href="${esc(invite)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5.3A17 17 0 0 0 15.8 4l-.5 1.1a15.6 15.6 0 0 0-4.6 0L10.2 4A17 17 0 0 0 6 5.3 17.6 17.6 0 0 0 3 17.2a17 17 0 0 0 5.1 2.6l1.1-1.8a11 11 0 0 1-1.7-.8l.4-.3a12.2 12.2 0 0 0 10.4 0l.4.3a11 11 0 0 1-1.7.8l1.1 1.8a17 17 0 0 0 5.1-2.6A17.5 17.5 0 0 0 20 5.3ZM9.3 14.8c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm5.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg><span>Join Discord</span></a></div>` : '';
     const note = CFG.demo ? `<div class="banner">Preview: on the live site, players log in with Discord first. Try any Friend ID here. The check uses sample data and nothing is saved.</div>` : '';
     const me = joinedPlayer();
     let body;
@@ -1255,8 +1292,8 @@
         <p class="reg-hint">Your Friend ID is the number on your Dota 2 profile page, under your name.${CFG.demo ? '' : ` Logged in as ${esc(discordName())} on Discord. <button class="link" data-reg="logout">Log out</button>`}</p>
         ${card}`;
     }
-    view.innerHTML = hero + note + discordCard + body;
-    wireJoin();
+    view.innerHTML = hero + note + body + (me ? '' : discordRow);
+    wireJoin(); syncCta();
   }
 
   function wireJoin() {
@@ -1320,7 +1357,7 @@
   }
 
   // ---------- admin: visitors + linked players ----------
-  const PAGE_NAME = { home: 'Home', weekly: 'Weekly', league: 'League', season: 'Season', avatar: 'Avatar', rules: 'Rules', register: 'Join', calibrate: 'Calibrate', guilds: 'Guilds', guild: 'Guild pages', fight: 'Fight replays', duel: 'Duel sandbox' };
+  const PAGE_NAME = { home: 'Home', weekly: 'Weekly', league: 'League', season: 'Season', avatar: 'Avatar', rules: 'Rules', register: 'Register', calibrate: 'Calibrate', guilds: 'Guilds', guild: 'Guild pages', fight: 'Fight replays', duel: 'Duel sandbox' };
   function demoStats() {
     let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     const today = S.localDay(state.now, TZ), daily = Array.from({ length: 30 }, (_, k) => { const v = Math.round(4 + k * 0.9 + r() * 9 + ((k + 3) % 7 >= 5 ? 6 : 0)); return { day: new Date(S.dayToTs(today - 29 + k, TZ) * 1000 + TZ * 3600e3).toISOString().slice(0, 10), visitors: v, views: Math.round(v * (2.2 + r())) }; });
@@ -1409,7 +1446,7 @@
         <td class="hide-sm">${fmtLinked(m.linkedAt)}</td>
         <td class="hide-sm">${g ? esc(guildName(g)) : '–'}</td>
         <td class="r"><button class="btn unlink" data-adm="unlink" data-id="${m.id}" data-d="${esc(m.discordId || '')}">Unlink</button></td></tr>`; }).join('')}
-      </tbody></table>` : `<div class="empty"><strong>Nobody has linked yet.</strong> Share the Join page on your Discord.</div>`}`;
+      </tbody></table>` : `<div class="empty"><strong>Nobody has linked yet.</strong> Share the Register page on your Discord.</div>`}`;
     wireAdmin(); wireChart(view);
   }
 
@@ -1529,7 +1566,7 @@
     state.sb = window.supabase.createClient(AV.supabaseUrl, AV.supabaseAnonKey, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true } });
     const { data } = await state.sb.auth.getSession();
     state.session = data.session;
-    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) { state.admin.isAdmin = null; checkAdmin(); } if (!state.loading) { if (FEAT.avatars) renderAvatar(); renderRegister(); renderAdmin(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
+    state.sb.auth.onAuthStateChange((_event, session) => { const changed = (state.session && state.session.user && state.session.user.id) !== (session && session.user && session.user.id); state.session = session; if (changed) { state.admin.isAdmin = null; checkAdmin(); } if (!state.loading) { if (FEAT.avatars) renderAvatar(); renderRegister(); renderAdmin(); renderHome(); if (guildsOn) loadGuilds().then(renderGuildViews, () => {}); } });
     if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
     if (state.session && store.get('returnToAvatar')) { store.set('returnToAvatar', null); location.hash = 'avatar'; }
     if (state.session && store.get('returnTo')) { const r = store.get('returnTo'); store.set('returnTo', null); location.hash = r; }
@@ -2008,11 +2045,12 @@
           </div></div>`;
       }
     }
+    const duelBlock = duelCard();
     const lastBlock = last ? `
       <div class="section-head"><div><div class="eyebrow">${fmtDateTime(resultsOf(last)[0].at)}</div><h2>Last Fight Night</h2></div><div class="status" style="margin:0"><span id="gCopyMsg" role="status"></span><button class="btn-red" data-g="copy">Copy for Discord</button></div></div>
       <div class="fight-list">${resultsOf(last).map(resultLine).join('')}</div>` : '';
     const tableBlock = table.length ? `
-      <div class="section-head"><div><div class="eyebrow">${esc(CFG.season.name)} · best record wins</div><h2>Guild league</h2></div><a class="btn" href="#duel">Duel sandbox</a></div>
+      <div class="section-head"><div><div class="eyebrow">${esc(CFG.season.name)} · best record wins</div><h2>Guild league</h2></div></div>
       <table class="table gtable"><thead><tr><th>#</th><th>Guild</th><th class="r">W–L</th><th class="r hide-sm">Enemy HP destroyed</th><th class="r hide-sm">Last 5</th></tr></thead><tbody>
       ${table.map(r => { const g = guildInfo(r.id); return `<tr><td class="rank num ${r.rank && r.rank <= 3 ? 'top' : ''}">${r.rank || '–'}</td><td><a class="plain" href="#guild/${r.id}">${guildLabel(g)}</a></td><td class="r num"><span class="w">${r.w}</span>–<span class="l">${r.l}</span></td><td class="r num hide-sm">${r.played ? Math.round(r.destroyedPct * 100) + '%' : '–'}</td><td class="r hide-sm">${r.last.map(x => `<span class="res ${x}">${x}</span>`).join('')}</td></tr>`; }).join('')}
       </tbody></table>` : '';
@@ -2027,7 +2065,7 @@
         <div class="gcard-actions"><a class="btn" href="#guild/${g.id}">View</a>${canAsk ? (requested ? `<button class="btn" data-g="cancel" data-id="${g.id}">Requested · Cancel</button>` : `<button class="btn-red" data-g="request" data-id="${g.id}">Request to join</button>`) : ''}</div>
       </div>`;
     }).join('');
-    view.innerHTML = hero + demoPicker() + (state.gMsg ? `<div class="gmsg" role="status">${esc(state.gMsg)}</div>` : '') + panel + lastBlock + tableBlock +
+    view.innerHTML = hero + demoPicker() + (state.gMsg ? `<div class="gmsg" role="status">${esc(state.gMsg)}</div>` : '') + panel + lastBlock + duelBlock + tableBlock +
       `<div class="section-head"><div><div class="eyebrow">${state.guilds.length} guild${state.guilds.length === 1 ? '' : 's'}</div><h2>All guilds</h2></div></div>` +
       (cards ? `<div class="gcards">${cards}</div>` : '<div class="empty"><strong>No guilds yet.</strong>Be the first to start one.</div>');
     wireCrestPicker(view);
@@ -2144,6 +2182,22 @@
     const p = memberById(Number(v.slice(2))); if (!p) return null;
     return { id: 'p' + p.id, name: p.name, members: [{ name: p.name, lo: loadoutOf(p.id), pos: 3, playerId: p.id }] };
   }
+  // Teaser card: you (if you're a linked player) against a random league player. The pair is picked once per visit, so it doesn't change on every re-render.
+  function duelCard() {
+    const ms = state.members || [];
+    const did = myDiscordId(), me = did ? memberByDiscord(did) : null;
+    let pair = state.duelPick;
+    const valid = pr => pr && pr.every(id => memberById(id)) && pr[0] !== pr[1] && (!me || pr[0] === me.id);
+    if (!valid(pair) && ms.length >= 2) {
+      const left = me || ms[Math.floor(Math.random() * ms.length)], others = ms.filter(m => m.id !== left.id);
+      pair = state.duelPick = [left.id, others[Math.floor(Math.random() * others.length)].id];
+    }
+    const art = FEAT.avatars && valid(pair) ? `<div class="vsbox" aria-hidden="true">${avaImg(pair[0], '')}<span class="vs">VS</span>${avaImg(pair[1], 'r')}</div>` : '';
+    const ab = valid(pair) ? ` data-a="p:${pair[0]}" data-b="p:${pair[1]}"` : '';
+    return `<div class="duel-card"><div><div class="eyebrow">Practice arena<span class="more"> · just for fun</span></div><h3>Duel sandbox</h3>
+      <p>Pit any two guilds, or any two players, against each other with the gear they're wearing right now. Test a new look before Fight Night. Nothing counts toward the season.</p>
+      <a class="go" href="#duel" data-g="startduel"${ab}>⚔ Start a duel</a></div>${art}</div>`;
+  }
   function renderDuel() {
     const view = $('#view-duel'); if (!view) return;
     if (arenaCtl) { arenaCtl.stop(); arenaCtl = null; }
@@ -2219,6 +2273,7 @@
     if (act === 'newlink') { if (!confirmLike(el)) return; return guildAction('my_invite_code', { p_new: true }, 'New link made. The old one no longer works.'); }
     if (act === 'copylink') { const i = view.querySelector('#gInvite'); try { await navigator.clipboard.writeText(i.value); el.textContent = 'Copied'; } catch { i.select(); } return; }
     if (act === 'copy') return copyFightNight();
+    if (act === 'startduel') { if (el.dataset.a) { duel.a = el.dataset.a; duel.b = el.dataset.b; } return; }   // the link itself opens #duel
     if (act === 'copyfight') { const m = $('#fCopyMsg'); try { await navigator.clipboard.writeText(location.href); m.textContent = 'Link copied.'; } catch { m.textContent = location.href; } return; }
     if (act === 'duel') { duel.a = val('#duelA'); duel.b = val('#duelB'); duel.seed++; runDuel(); }
   });
@@ -2299,7 +2354,7 @@
     const thisWeek = S.weekStartDay(state.now, TZ);
     const weekRows = S.weeklyTable(state.members, state.scored, thisWeek, CFG).filter(r => r.games > 0);
     const seasonStart = S.dayToTs(S.seasonWeeks(CFG)[0], TZ);
-    const invite = CFG.discordInvite;
+    const invite = CFG.discordInvite, meHome = selfLink && state.ready ? joinedPlayer() : null;
 
     // the stage: real players when there are enough of them, otherwise a showcase cast
     let cast = SHOWCASE.map(c => ({ ...c, name: '' }));
@@ -2338,8 +2393,8 @@
             <p class="tagline">Play your normal games. Score every week. Dress your pixel hero.</p>
             <p class="sub">Every ${modesAnd} match you play counts automatically. Top the weekly board, unlock gear from what you actually do in game, and taunt your friends from the podium.</p>
             <div class="ctas">
-              <a class="btn-red" href="#weekly">See this week's standings</a>
-              ${invite ? `<a class="btn" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : `<button class="btn" data-home="join">How to join</button>`}
+              ${selfLink ? (meHome ? (FEAT.avatars ? '<a class="btn-red" href="#avatar">Dress your avatar</a>' : '') : '<a class="btn-red" href="#register">Register to play</a>') + `<a class="${meHome && !FEAT.avatars ? 'btn-red' : 'btn'}" href="#weekly">See this week's standings</a>`
+                : `<a class="btn-red" href="#weekly">See this week's standings</a>${invite ? `<a class="btn" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : `<button class="btn" data-home="join">How to join</button>`}`}
               ${CFG.explainerVideo ? '<button class="btn" data-home="video">▶ Watch the 40s explainer</button>' : ''}
             </div>
           </div>
@@ -2357,7 +2412,7 @@
 
       <div class="section-head" id="home-join"><div><div class="eyebrow">Three steps</div><h2>How it works</h2></div></div>
       <ol class="steps">
-        <li><h3>Link your account</h3><p>Turn on Expose Public Match Data in Dota 2 (Settings › Options › Social), then ${selfLink ? 'log in with Discord on the <a href="#register">Join</a> page and enter your Friend ID' : 'post your Friend ID in #register on our Discord'}.</p></li>
+        <li><h3>Link your account</h3><p>Turn on Expose Public Match Data in Dota 2 (Settings › Options › Social), then ${selfLink ? 'log in with Discord on the <a href="#register">Register</a> page and enter your Friend ID' : 'post your Friend ID in #register on our Discord'}.</p></li>
         <li><h3>Play like you always do</h3><p>${modesAnd} games score automatically. Solo wins are worth the most and every loss still earns points, so solo players and five-stacks can both top the week.</p></li>
         <li><h3>Climb, unlock, show off</h3><p>${guildsOn ? 'Unlock gear, join a guild, and send your avatars into battle every Fight Night. Top the weekly board to taunt from the podium.' : 'Top the weekly board, chase Season Champion, unlock gear for your avatar, and taunt from the top 3.'}</p></li>
       </ol>
@@ -2386,7 +2441,7 @@
       <div class="cta-band">
         <h2>Your next game counts</h2>
         <p>Link your account, play a match, and see your name on the board.</p>
-        <div class="ctas">${invite ? `<a class="btn-red" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : `<a class="btn-red" href="#register">Register a player</a>`}<a class="btn" href="#weekly">See the standings</a></div>
+        <div class="ctas">${selfLink ? `${meHome ? '' : '<a class="btn-red" href="#register">Register to play</a>'}${invite ? `<a class="btn" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : ''}` : invite ? `<a class="btn-red" href="${esc(invite)}" target="_blank" rel="noopener">Join the Discord</a>` : `<a class="btn-red" href="#register">Register a player</a>`}<a class="btn" href="#weekly">See the standings</a></div>
       </div>`;
     const slot = view.querySelector('#home-video-slot'); if (slot) slot.replaceWith(explainerNode());   // same player across re-renders, so playback never resets
     view.onclick = ev => {
@@ -2407,6 +2462,7 @@
     if (v === 'admin' && !CFG.demo && state.admin.isAdmin == null && !state.admin.checking) checkAdmin();
     else if (arenaCtl && !['fight', 'duel'].includes(v)) { arenaCtl.stop(); arenaCtl = null; }
     VIEWS.forEach(n => $('#view-' + n).classList.toggle('active', n === v));
+    syncCta();
     document.querySelectorAll('nav.tabs a').forEach(a => {
       const target = ['guild', 'fight', 'duel'].includes(v) ? 'guilds' : v;
       if (a.getAttribute('href') === '#' + target) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -2423,10 +2479,11 @@
   if (!FEAT.avatars) $('#view-avatar').remove();
   if (!guildsOn) ['guilds', 'guild', 'fight', 'duel'].forEach(v => $('#view-' + v).remove());
   if (!selfLink) $('#view-admin').remove();
-  else { $('#navRegister').textContent = 'Join'; if (CFG.demo) $('#adminLink').hidden = false; }
+  else { $('#navRegister').remove(); if (CFG.demo) $('#adminLink').hidden = false; }
   document.title = CFG.leagueName;
   $('#leagueName').textContent = CFG.leagueName;
-  if (CFG.discordInvite) { const j = $('#joinBtn'); j.href = CFG.discordInvite; j.hidden = false; j.target = '_blank'; j.rel = 'noopener'; }
+  if (CFG.discordInvite) { const j = $('#joinBtn'); j.href = CFG.discordInvite; j.hidden = false; j.target = '_blank'; j.rel = 'noopener'; const f = $('#footDiscord'); f.querySelector('a').href = CFG.discordInvite; f.hidden = false; }
+  syncCta();
   window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
   renderRules(); renderRegister(); route();
   initLogin().catch(() => state.errors.push('Avatar login is unavailable right now.')).finally(() => load(false));
