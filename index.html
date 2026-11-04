@@ -297,6 +297,7 @@
   .w { color: var(--radiant); } .l { color: var(--dire); }
   .chev { color: var(--red-hot); transition: transform .15s; display: inline-block; margin-left: 4px; }
   tr.open .chev { transform: rotate(90deg); }
+  tr.detail .more-games { margin: 10px 0 4px; }
   tr.detail td { background: #0a0b0c; padding: 6px 14px 16px; }
   .tag { display: inline-block; font: 600 11px/1.6 var(--body); letter-spacing: .1em; text-transform: uppercase; padding: 0 7px; border: 1px solid var(--line); color: var(--muted); margin-right: 4px; white-space: nowrap; }
   .tag.Stack { border-color: rgba(143, 200, 79, .5); color: var(--radiant); }
@@ -1004,8 +1005,9 @@
     if (next && next.classList.contains('detail')) { next.remove(); tr.classList.remove('open'); tr.setAttribute('aria-expanded', 'false'); return; }
     tr.classList.add('open'); tr.setAttribute('aria-expanded', 'true');
     const nameOf = id => (state.members.find(m => m.id === id) || {}).name || id;
-    const items = row.entries.map(e => `
-      <tr class="${e.counted ? '' : 'skip'}">
+    const SHOW = 5;   // latest 5 games first; the rest behind "Show all"
+    const items = row.entries.map((e, i) => `
+      <tr class="${e.counted ? '' : 'skip'}"${i >= SHOW ? ' data-more hidden' : ''}>
         <td>${fmtDateTime(e.start_time)}</td>
         <td>${modeLabel(e.mode)}</td>
         <td>${heroChip(e.hero_id)}${esc(heroName(e.hero_id))}</td>
@@ -1016,8 +1018,15 @@
       </tr>`).join('');
     const d = document.createElement('tr');
     d.className = 'detail';
-    d.innerHTML = `<td colspan="${MULTI ? 6 + MODES.length : 6}">${row.entries.length ? `<table class="mini"><thead><tr><th>When</th><th>Mode</th><th>Hero</th><th>Result</th><th class="hide-sm">K/D/A</th><th>Pts</th><th></th></tr></thead><tbody>${items}</tbody></table>`
+    d.innerHTML = `<td colspan="${MULTI ? 6 + MODES.length : 6}">${row.entries.length ? `<table class="mini"><thead><tr><th>When</th><th>Mode</th><th>Hero</th><th>Result</th><th class="hide-sm">K/D/A</th><th>Pts</th><th></th></tr></thead><tbody>${items}</tbody></table>${row.entries.length > SHOW ? `<button class="btn more-games" data-n="${row.entries.length}" aria-expanded="false">Show all ${row.entries.length} games</button>` : ''}`
       : `<p style="color:var(--muted);margin:10px 0 0">No ${modesAnd} games this week.</p>`}</td>`;
+    const mb = d.querySelector('.more-games');
+    if (mb) mb.onclick = e => {
+      e.stopPropagation();
+      const open = mb.getAttribute('aria-expanded') !== 'true';
+      d.querySelectorAll('tr[data-more]').forEach(r => { r.hidden = !open; });
+      mb.setAttribute('aria-expanded', String(open)); mb.textContent = open ? `Show latest ${SHOW} only` : `Show all ${mb.dataset.n} games`;
+    };
     tr.after(d);
   }
 
