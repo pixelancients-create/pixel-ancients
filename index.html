@@ -190,6 +190,7 @@
   .champ-wrap .bubble::after, .stage-wrap .bubble::after { left: 50%; bottom: -7px; transform: translateX(-50%) rotate(45deg); }
   .stage-wrap { position: relative; margin-top: 44px; }
   .stage-wrap .bubble { bottom: auto; top: -40px; }
+  .bubble.ghost { opacity: .55; font-style: italic; font-weight: 500; }
   .taunt-panel .form { align-items: center; }
   .taunt-panel .count { color: var(--muted); font-size: 14px; min-width: 52px; text-align: right; }
   .taunt-panel .count.full { color: var(--ember); }
@@ -1709,11 +1710,6 @@
       const len = Array.from(dT.text).length;
       panel = `<div class="taunt-panel">
         <p class="lead">Your taunt plays on the Weekly page whenever you finish in the top 3. The week's leader gets the big spotlight at the top of the page.</p>
-        <h3>Animation</h3>
-        <div class="items" style="margin-bottom:24px">${TAUNTS.map(t => `
-          <button class="item ${dT.anim === t.id ? 'equipped' : ''}" data-act="taunt-anim" data-val="${t.id}">
-            <span class="slot-ic big" style="--rc:rgba(232,85,62,.6)"><img src="${A.toDataURL(draft, 0, t.id === 'none' ? 'idle' : t.id)}"${animAttr(draft, t.id)} alt=""></span>
-            <div class="iname">${t.name}</div></button>`).join('')}</div>
         <h3>Taunt line</h3>
         <div class="form" style="margin-top:6px">
           <label for="tauntInput" class="sr-only">Taunt line</label>
@@ -1721,7 +1717,12 @@
           <span id="tauntCount" class="count ${len >= TCFG.maxLength ? 'full' : ''}">${len}/${TCFG.maxLength}</span>
         </div>
         <p id="tauntWarn" class="taunt-warn" role="alert" ${tauntBlocked(dT.text) && dT.text ? '' : 'hidden'}>${FILTER && FILTER.ready ? "That line isn't allowed. Slurs and abuse are blocked; try some friendly trash talk instead." : "Taunts can't be checked right now, so they're switched off. Try again later."}</p>
-        <p class="lead" style="font-size:14px">Keep it banter. Slurs and abusive words are blocked, including disguised spellings, and admins can block more.</p>
+        <p class="lead" style="font-size:14px;margin-bottom:28px">Keep it banter. Slurs and abusive words are blocked, including disguised spellings, and admins can block more.</p>
+        <h3>Animation</h3>
+        <div class="items" style="margin-bottom:24px">${TAUNTS.map(t => `
+          <button class="item ${dT.anim === t.id ? 'equipped' : ''}" data-act="taunt-anim" data-val="${t.id}">
+            <span class="slot-ic big" style="--rc:rgba(232,85,62,.6)"><img src="${A.toDataURL(draft, 0, t.id === 'none' ? 'idle' : t.id)}"${animAttr(draft, t.id)} alt=""></span>
+            <div class="iname">${t.name}</div></button>`).join('')}</div>
       </div>`;
     } else {
       const slot = A.SLOTS.find(sl => sl.id === L.tab);
@@ -1744,7 +1745,7 @@
         <aside class="stage">
           ${CFG.demo ? `<label class="sr-only" for="demoPick">Try the locker as</label><select id="demoPick">${state.members.map(m => `<option value="${m.id}" ${m.id === me.id ? 'selected' : ''}>Try it as ${esc(m.name)}</option>`).join('')}</select>` : ''}
           <div class="stage-wrap">
-            <div class="bubble" id="stageBubble" ${dT.text && !tauntBlocked(dT.text) ? '' : 'hidden'}>${tauntBlocked(dT.text) ? '' : esc(dT.text)}</div>
+            ${(() => { const ok = dT.text && !tauntBlocked(dT.text), ghost = !ok && L.tab === 'taunt'; return `<div class="bubble${ghost ? ' ghost' : ''}" id="stageBubble" ${ok || ghost ? '' : 'hidden'}>${ok ? esc(dT.text) : ghost ? 'Type a taunt line…' : ''}</div>`; })()}
             <img class="stage-ava" src="${A.toDataURL(draft, 0, dT.anim === 'none' ? 'idle' : dT.anim)}"${animAttr(draft, dT.anim)} alt="${esc(me.name)}'s avatar">
           </div>
           <div class="build" aria-label="Equipped gear">${A.SLOTS.map(sl => { const it = A.findItem(sl.id, draft[sl.id]); return it && it.id !== 'none' ? `<span title="${esc(it.name)} (${rarityOf(it).name})">${iconTile(sl.id, it, draft)}</span>` : `<span title="${sl.name}: empty"><span class="slot-ic empty"></span></span>`; }).join('')}</div>
@@ -1778,7 +1779,7 @@
       const n = Array.from(v).length, c = $('#tauntCount'), sb = $('#stageBubble');
       c.textContent = `${n}/${TCFG.maxLength}`; c.classList.toggle('full', n >= TCFG.maxLength);
       const bad = tauntBlocked(v), w = $('#tauntWarn');
-      sb.textContent = bad ? '' : v.trim(); sb.hidden = bad || !v.trim();
+      const show = !bad && v.trim(); sb.textContent = show ? v.trim() : 'Type a taunt line…'; sb.classList.toggle('ghost', !show); sb.hidden = false;
       w.hidden = !bad; ti.setAttribute('aria-invalid', bad ? 'true' : 'false');
     };
     view.onclick = async ev => {
