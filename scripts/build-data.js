@@ -25,7 +25,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 let last = 0;
 let calls = 0;
 async function od(p, tries = 4, method = 'GET') {
-  const wait = Math.max(0, last + 1100 - Date.now());
+  const wait = Math.max(0, last + 1300 - Date.now());   // about 45 calls a minute, under OpenDota's free 60
   if (wait) await sleep(wait);
   last = Date.now(); calls++;
   const url = API + p + (KEY ? (p.includes('?') ? '&' : '?') + 'api_key=' + KEY : '');
@@ -78,9 +78,10 @@ async function updateReplays(out, previous, roster, now) {
   Object.keys(out.parsed).forEach(id => { if (out.parsed[id].s < S.seasonRange(CFG).start - 14 * 86400) delete out.parsed[id]; });
   const scored = S.scorePubs(roster, out.players, CFG);
   const { start, end } = S.seasonRange(CFG);
+  const from = Math.max(start, CFG.season.replaysFrom ? S.parseLocalDate(CFG.season.replaysFrom, CFG.timezoneOffsetHours) : 0);
   const games = new Map();
   for (const list of Object.values(scored)) for (const e of list) {
-    if (e.counted && e.start_time >= start && e.start_time < end && !(e.match_id in out.parsed)) games.set(String(e.match_id), e.start_time);
+    if (e.counted && e.start_time >= from && e.start_time < end && !(e.match_id in out.parsed)) games.set(String(e.match_id), e.start_time);
   }
   Object.keys(out.parseQueue).forEach(id => { if (!games.has(id)) delete out.parseQueue[id]; });
   const budget = calls + PARSE_CALLS_PER_RUN;
@@ -91,13 +92,18 @@ async function updateReplays(out, previous, roster, now) {
     const q = out.parseQueue[id] || { n: 0, t: 0 };
     if (q.n && now - q.t < RECHECK_AFTER) { waiting++; continue; }
     try {
-      const m = await od(`/matches/${id}`); read++;
+      const m = await od(`/matches/${id}`, 2); read++;
       if (isParsed(m)) { out.parsed[id] = { t: now, s: at, p: replayStats(m, ids) }; delete out.parseQueue[id]; continue; }
       if (q.n >= PARSE_TRIES || now - at > GIVE_UP_AFTER) { out.parsed[id] = { t: now, s: at, p: {}, none: 1 }; delete out.parseQueue[id]; continue; }
       await od(`/request/${id}`, 1, 'POST'); asked++;
       out.parseQueue[id] = { n: q.n + 1, t: now };
-    } catch (e) { out.warnings.push(`replay ${id}: ${e.message}`); }
+    } catch (e) {
+      // OpenDota says "slow down": stop the replay work for this run; the rest waits for the next hour
+      if (String(e.message).startsWith('429')) { out.warnings.push('replays: OpenDota rate limit reached, the rest waits for the next run'); break; }
+      out.warnings.push(`replay ${id}: ${e.message}`);
+    }
   }
+  waiting = [...games.keys()].filter(id => !out.parsed[id] && !(out.parseQueue[id] && out.parseQueue[id].t === now)).length;
   console.log(`Replays: ${read} read, ${asked} parse requests, ${waiting} waiting, ${Object.keys(out.parsed).length} stored`);
 }
 
