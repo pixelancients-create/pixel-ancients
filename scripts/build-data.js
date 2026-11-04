@@ -57,11 +57,12 @@ async function linkedPlayers() {
 
   const outFile = path.join(root, 'data.json');
   const previous = fs.existsSync(outFile) ? JSON.parse(fs.readFileSync(outFile, 'utf8')) : {};
-  const out = { generatedAt: Date.now(), heroes: previous.heroes || {}, players: {}, leagueMatches: [], warnings: [] };
+  const out = { generatedAt: Date.now(), heroes: previous.heroes || {}, heroImg: previous.heroImg || {}, players: {}, leagueMatches: [], warnings: [] };
 
   try {
     const heroes = await od('/heroes');
     out.heroes = Object.fromEntries(heroes.map(h => [h.id, h.localized_name]));
+    out.heroImg = Object.fromEntries(heroes.map(h => [h.id, String(h.name || '').replace('npc_dota_hero_', '')]));   // portrait file names
   } catch (e) { out.warnings.push('heroes: ' + e.message); }
 
   let linked = [];
