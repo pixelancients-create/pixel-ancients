@@ -260,7 +260,7 @@
     }));
     const steps = [];
     for (const e of result.events) { if (!steps[e.n]) steps[e.n] = []; steps[e.n].push(e); }
-    return { result, units, steps, floaters: [], shots: [], shouts: [], applied: 0, ended: false, flash: 0 };
+    return { result, units, steps, floaters: [], shots: [], shouts: [], applied: 0, ended: false, flash: 0, scene: sceneFor(result) };
   }
 
   // which sound each replay event makes
@@ -317,15 +317,137 @@
   }
 
   // ---------- drawing ----------
-  function drawBg(ctx) {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#16110f'); g.addColorStop(1, '#0c0d0e');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    // pixel floor
-    for (let y = 160; y < H; y += 8) for (let x = 0; x < W; x += 8) { if ((x / 8 + y / 8) % 2) { ctx.fillStyle = 'rgba(255,255,255,0.025)'; ctx.fillRect(x, y, 8, 8); } }
-    ctx.fillStyle = 'rgba(232,85,62,0.10)'; ctx.fillRect(0, 0, W / 2, H);
-    ctx.fillStyle = 'rgba(143,200,79,0.07)'; ctx.fillRect(W / 2, 0, W / 2, H);
-    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(W / 2 - 1, 40, 2, H - 40);
+  // ---------- battleground: a dim, original pixel scene ----------
+  // Left half: scorched "dire-style" ground with dead trees, ember cracks and a dark spire.
+  // Right half: grassy "radiant-style" ground with trees and a pale stone spire. A shallow river splits them,
+  // with a rune spot that glows slowly. Everything stays low-contrast so the fighters read first.
+  const BG = {};
+  function bgCanvas() {
+    const cv = document.createElement('canvas'), K = 3; cv.width = W * K; cv.height = H * K;
+    const c = cv.getContext('2d'); c.scale(K, K); c.imageSmoothingEnabled = false;
+    const px = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const finish = () => {
+      // faint team tint per half, a soft vignette, and a plain header strip for names and HP bars
+      px(0, 40, W / 2, H - 40, 'rgba(232,85,62,0.035)'); px(W / 2, 40, W / 2, H - 40, 'rgba(143,200,79,0.03)');
+      const v = c.createRadialGradient(W / 2, H / 2 + 20, 120, W / 2, H / 2 + 20, 330); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.45)'); c.fillStyle = v; c.fillRect(0, 0, W, H);
+      const hd = c.createLinearGradient(0, 0, 0, 44); hd.addColorStop(0, 'rgba(10,9,9,0.92)'); hd.addColorStop(1, 'rgba(10,9,9,0)'); c.fillStyle = hd; c.fillRect(0, 0, W, 44);
+      return cv;
+    };
+    return { cv, c, px, rnd, finish };
+  }
+  // Scene 1 — River: scorched ground and a dark spire on the left, grass and a pale spire on the right, a river between
+  function buildRiver() {
+    const { c, px, rnd, finish } = bgCanvas();
+    const riverX = y => 240 + Math.round(Math.sin(y / 38) * 7);          // centre line of the river
+    // ground
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#120d0c'); g.addColorStop(1, '#0d0c0b'); px(0, 0, W, H, g);
+    for (let y = 40; y < H; y++) { const rx = riverX(y); px(0, y, rx - 20, 1, y % 2 ? '#1c1210' : '#1a110f'); px(rx + 20, y, W - rx - 20, 1, y % 2 ? '#111a10' : '#10180f'); }
+    // ground speckle: ash and embers on the left, grass tufts on the right
+    for (let i = 0; i < 420; i++) {
+      const x = Math.floor(rnd() * W), y = 44 + Math.floor(rnd() * (H - 46)), rx = riverX(y);
+      if (Math.abs(x - rx) < 24) continue;
+      if (x < rx) px(x, y, 2, 1, rnd() < 0.08 ? 'rgba(232,85,62,0.35)' : 'rgba(90,60,50,0.35)');
+      else { const col = rnd() < 0.5 ? 'rgba(95,160,74,0.28)' : 'rgba(60,110,50,0.32)'; px(x, y, 1, 2, col); px(x + 1, y + 1, 1, 1, col); }
+    }
+    // ember cracks (left)
+    [[18, 196, 26], [120, 270, 30], [60, 118, 18], [182, 240, 20]].forEach(([x, y, len]) => { for (let k = 0; k < len; k++) px(x + k, y + Math.round(Math.sin(k / 3) * 1.5), 1, 1, k % 5 ? 'rgba(194,60,42,0.30)' : 'rgba(255,122,61,0.45)'); });
+    // stone path tiles (right)
+    for (let k = 0; k < 7; k++) { const x = 300 + k * 22, y = 286 - (k % 2) * 3; px(x, y, 12, 5, 'rgba(120,130,120,0.16)'); px(x, y, 12, 1, 'rgba(200,210,200,0.10)'); }
+    // river
+    for (let y = 40; y < H; y++) {
+      const rx = riverX(y), w = 15 + Math.round(Math.sin(y / 23) * 2);
+      px(rx - w - 3, y, 3, 1, 'rgba(60,70,60,0.5)'); px(rx + w, y, 3, 1, 'rgba(60,70,60,0.5)');                         // banks
+      px(rx - w, y, w * 2, 1, y % 2 ? '#10232c' : '#0f2230');
+      if ((y * 7) % 11 === 0) px(rx - w + ((y * 13) % (w * 2 - 6)), y, 6, 1, 'rgba(150,200,230,0.13)');               // ripples
+    }
+    // dead trees (left) and leafy trees (right), in the margins and the back
+    const dead = (x, y, h) => { px(x, y - h, 2, h, '#24171a'); px(x - 4, y - h + 4, 4, 1, '#24171a'); px(x - 5, y - h + 3, 1, 1, '#24171a'); px(x + 2, y - h + 7, 5, 1, '#24171a'); px(x + 6, y - h + 6, 1, 1, '#24171a'); px(x - 3, y - h + 10, 3, 1, '#24171a'); };
+    const tree = (x, y, s) => { px(x, y - 4, 2, 4, '#2a2014'); px(x - s, y - 4 - s, s * 2 + 2, s, '#173016'); px(x - s + 1, y - 5 - s * 2 + 2, s * 2, s - 1, '#1c3a1a'); px(x - s + 2, y - 4 - s, 3, 1, '#28502a'); px(x - 1, y - 5 - s * 2 + 1, 4, 1, '#28502a'); };
+    [[14, 262, 22], [40, 200, 16], [8, 150, 18], [196, 66, 14], [30, 92, 12]].forEach(([x, y, h]) => dead(x, y, h));
+    [[462, 262, 6], [438, 196, 5], [470, 150, 5], [284, 70, 4], [452, 96, 4]].forEach(([x, y, s]) => tree(x, y, s));
+    // distant spires: dark with a red crystal (left), pale stone with a green crystal (right)
+    const spire = (x, body, edge, crystal, glow) => {
+      px(x, 70, 14, 64, body); px(x + 2, 62, 10, 8, body); px(x + 4, 56, 6, 6, body); px(x, 70, 2, 64, edge); px(x - 2, 132, 18, 4, body);
+      const rg = c.createRadialGradient(x + 7, 50, 1, x + 7, 50, 18); rg.addColorStop(0, glow); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; c.fillRect(x - 12, 32, 38, 38);
+      px(x + 5, 46, 4, 7, crystal); px(x + 6, 44, 2, 2, crystal);
+    };
+    spire(22, '#1d1416', '#2c1c1e', '#c23c2a', 'rgba(232,85,62,0.28)');
+    spire(444, '#262b28', '#353c37', '#6fd16a', 'rgba(143,200,79,0.22)');
+    return finish();
+  }
+  // Scene 2 — Cavern: a deep lair with stalactites, a glowing pit in the middle, crystals and cave mushrooms
+  function buildCavern() {
+    const { c, px, rnd, finish } = bgCanvas();
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0d0b10'); g.addColorStop(1, '#100e13'); px(0, 0, W, H, g);
+    for (let y = 40; y < H; y += 2) px(0, y, W, 1, 'rgba(255,255,255,0.012)');
+    // floor stones and pebbles
+    for (let i = 0; i < 300; i++) { const x = Math.floor(rnd() * W), y = 60 + Math.floor(rnd() * (H - 62)); if (Math.abs(x - 240) < 30 && y > 150) continue; px(x, y, 1 + Math.floor(rnd() * 3), 1, rnd() < 0.5 ? 'rgba(120,110,140,0.20)' : 'rgba(70,64,84,0.35)'); }
+    // stalactites hanging from the ceiling, behind the header
+    for (let x = 4; x < W; x += 14 + Math.floor(rnd() * 10)) { const h = 10 + Math.floor(rnd() * 22); for (let k = 0; k < h; k++) { const w = Math.max(1, Math.round((h - k) / h * 6)); px(x - (w >> 1), 36 + k, w, 1, k % 3 ? '#1a1620' : '#221d2a'); } }
+    // the pit: a wide sunken crater with a rim of stones and a faint ember glow at the bottom
+    for (let y = 226; y < 272; y++) { const t = (y - 249) / 23, w = Math.round(Math.sqrt(Math.max(0, 1 - t * t)) * 26); if (w <= 0) continue; px(240 - w, y, w * 2, 1, y < 236 ? '#0c0b10' : '#07060a'); px(240 - w - 3, y, 3, 1, 'rgba(110,100,130,0.40)'); px(240 + w, y, 3, 1, 'rgba(70,64,84,0.55)'); }
+    for (let k = 0; k < 14; k++) { const a = (k / 14) * Math.PI * 2, x = Math.round(240 + Math.cos(a) * 29), y = Math.round(249 + Math.sin(a) * 25); px(x - 2, y - 1, 4, 3, 'rgba(90,82,104,0.55)'); px(x - 2, y - 1, 4, 1, 'rgba(150,140,170,0.35)'); }
+    const pg = c.createRadialGradient(240, 254, 2, 240, 254, 26); pg.addColorStop(0, 'rgba(255,122,61,0.26)'); pg.addColorStop(0.6, 'rgba(120,40,20,0.10)'); pg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = pg; c.fillRect(208, 224, 64, 50);
+    // crystal clusters in the corners (purple, left / teal, right)
+    const crystal = (x, y, col, hi) => { [[0, 0, 3, 10], [3, 3, 3, 7], [-3, 4, 3, 6], [6, 6, 2, 4]].forEach(([dx, dy, w, h]) => { px(x + dx, y - h + dy, w, h, col); px(x + dx, y - h + dy, 1, h, hi); }); };
+    crystal(18, 120, 'rgba(138,90,214,0.55)', 'rgba(200,170,255,0.45)'); crystal(30, 270, 'rgba(138,90,214,0.45)', 'rgba(200,170,255,0.35)');
+    crystal(452, 124, 'rgba(54,183,154,0.50)', 'rgba(170,255,230,0.40)'); crystal(440, 272, 'rgba(54,183,154,0.45)', 'rgba(170,255,230,0.35)');
+    // bones near the pit
+    [[206, 286], [262, 176], [218, 160], [274, 292]].forEach(([x, y]) => { px(x, y, 6, 1, 'rgba(220,210,190,0.30)'); px(x - 1, y - 1, 2, 3, 'rgba(220,210,190,0.30)'); px(x + 5, y - 1, 2, 3, 'rgba(220,210,190,0.30)'); });
+    // stone pillars at both edges
+    [[6, '#17141c', '#201b27'], [460, '#17141c', '#201b27']].forEach(([x, b, e]) => { px(x, 60, 14, 240, b); px(x, 60, 2, 240, e); for (let y = 76; y < 300; y += 26) px(x, y, 14, 1, 'rgba(0,0,0,0.5)'); });
+    return finish();
+  }
+  // Scene 3 — Frost: a winter field at night with pines, a frozen river and drifting snow
+  function buildFrost() {
+    const { c, px, rnd, finish } = bgCanvas();
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0d1116'); g.addColorStop(1, '#141a20'); px(0, 0, W, H, g);
+    for (let y = 40; y < H; y++) px(0, y, W, 1, y % 2 ? 'rgba(190,210,225,0.035)' : 'rgba(190,210,225,0.02)');
+    for (let i = 0; i < 360; i++) { const x = Math.floor(rnd() * W), y = 44 + Math.floor(rnd() * (H - 46)); if (Math.abs(x - 240) < 22) continue; px(x, y, 1 + Math.floor(rnd() * 2), 1, rnd() < 0.6 ? 'rgba(210,225,240,0.20)' : 'rgba(150,170,190,0.25)'); }
+    // frozen river with cracks
+    const rx = y => 240 + Math.round(Math.sin(y / 44 + 1) * 6);
+    for (let y = 40; y < H; y++) { const x = rx(y), w = 14; px(x - w - 2, y, 2, 1, 'rgba(210,225,240,0.25)'); px(x + w, y, 2, 1, 'rgba(210,225,240,0.25)'); px(x - w, y, w * 2, 1, y % 2 ? '#18303c' : '#172d3a'); }
+    [[232, 70, 14], [244, 140, 12], [236, 210, 16], [246, 262, 10]].forEach(([x, y, n]) => { for (let k = 0; k < n; k++) px(x + Math.round(Math.sin(k) * 3) + (k >> 1), y + k, 1, 1, 'rgba(220,240,255,0.35)'); });
+    // pines with snow caps
+    const pine = (x, y, h) => { px(x, y - 3, 2, 3, '#1c1710'); for (let k = 0; k < h; k++) { const w = Math.max(1, Math.round((k + 1) / h * 9)); px(x + 1 - w, y - 3 - h + k, w * 2, 1, k % 2 ? '#10241f' : '#122a24'); if (k % 4 === 0) px(x + 1 - w, y - 3 - h + k, w * 2, 1, 'rgba(220,235,245,0.35)'); } };
+    [[22, 284, 30], [44, 214, 22], [14, 160, 26], [36, 108, 18], [200, 80, 14], [458, 284, 30], [436, 214, 22], [466, 160, 26], [444, 108, 18], [280, 80, 14]].forEach(([x, y, h]) => pine(x, y, h));
+    // a small campfire glow on the left, an ice shard on the right
+    const fg = c.createRadialGradient(54, 290, 1, 54, 290, 26); fg.addColorStop(0, 'rgba(255,150,70,0.30)'); fg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = fg; c.fillRect(24, 262, 60, 38);
+    px(50, 292, 9, 2, '#2a1a10'); px(52, 288, 2, 4, 'rgba(255,170,80,0.7)'); px(55, 287, 2, 5, 'rgba(255,120,60,0.7)');
+    [[0, 0, 3, 14], [3, 4, 3, 10], [-3, 6, 3, 8]].forEach(([dx, dy, w, h]) => { px(450 + dx, 290 - h + dy, w, h, 'rgba(150,210,240,0.35)'); px(450 + dx, 290 - h + dy, 1, h, 'rgba(230,250,255,0.45)'); });
+    return finish();
+  }
+  // Only River is switched on for now. To rotate scenes, add { id: 'cavern', build: buildCavern } and { id: 'frost', build: buildFrost } to this list.
+  const SCENES = [{ id: 'river', build: buildRiver }];
+  // Each fight (and each round of a best-of-3) picks a scene from its own content, so a replay always looks the same for everyone.
+  function sceneFor(result) {
+    const key = `${result.teams.map(t => t.name).join('|')}|${result.actions}|${result.winner}`;
+    let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    return h % SCENES.length;
+  }
+  function drawBg(ctx, now = 0, scene = 0) {
+    const sc = SCENES[scene] || SCENES[0];
+    if (!BG[sc.id]) BG[sc.id] = sc.build();
+    ctx.drawImage(BG[sc.id], 0, 0, W, H);
+    const p = 0.5 + 0.5 * Math.sin(now / 900);
+    if (sc.id === 'river') {             // rune spot in the river: a slow, faint pulse
+      const rx = 240 + Math.round(Math.sin(250 / 38) * 7), ry = 250;
+      ctx.fillStyle = `rgba(120,200,255,${0.10 + 0.10 * p})`; ctx.fillRect(rx - 5, ry - 1, 10, 2); ctx.fillRect(rx - 1, ry - 5, 2, 10);
+      ctx.fillStyle = `rgba(200,240,255,${0.25 + 0.25 * p})`; ctx.fillRect(rx - 1, ry - 1, 2, 2);
+    } else if (sc.id === 'cavern') {     // cave mushrooms breathe a soft teal glow
+      [[40, 212], [196, 292], [288, 160], [430, 214], [212, 70]].forEach(([x, y], i) => {
+        const q = 0.5 + 0.5 * Math.sin(now / 1100 + i * 1.7);
+        ctx.fillStyle = `rgba(63,208,192,${0.08 + 0.10 * q})`; ctx.fillRect(x - 4, y - 5, 10, 8);
+        ctx.fillStyle = 'rgba(40,60,60,0.8)'; ctx.fillRect(x, y - 1, 2, 3);
+        ctx.fillStyle = `rgba(110,240,220,${0.35 + 0.25 * q})`; ctx.fillRect(x - 2, y - 3, 6, 2);
+      });
+    } else if (sc.id === 'frost') {      // a few snowflakes drifting down
+      for (let i = 0; i < 16; i++) {
+        const sp = 18 + (i % 5) * 6, x = ((i * 67 + now / 90 * (i % 2 ? 1 : -1) + Math.sin(now / 1500 + i) * 6) % W + W) % W, y = 40 + ((i * 41 + now / 1000 * sp) % (H - 40));
+        ctx.fillStyle = `rgba(230,240,250,${0.25 + (i % 3) * 0.08})`; ctx.fillRect(Math.round(x), Math.round(y), i % 4 ? 1 : 2, i % 4 ? 1 : 2);
+      }
+    }
   }
   function text(ctx, s, x, y, color, size = 10, align = 'center', weight = 700) {
     ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
@@ -354,7 +476,7 @@
       ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(x - 1, y - 1, w + 2, 5);
       ctx.fillStyle = pct > 0.5 ? '#8fc84f' : pct > 0.25 ? '#e2b957' : '#e8553e'; ctx.fillRect(x, y, Math.round(w * pct), 3);
     }
-    text(ctx, u.name.length > 13 ? u.name.slice(0, 12) + '…' : u.name, u.x + SPR / 2, u.y + SPR + 4, u.alive ? '#d6cfc2' : '#6c645c', 8, 'center', 600);
+    text(ctx, u.name.length > 13 ? u.name.slice(0, 12) + '…' : u.name, u.x + SPR / 2, u.y + SPR + 4, u.alive ? '#e6dfd4' : '#6c645c', 9, 'center', 600);
   }
   function drawHud(ctx, sc) {
     const [ta, tb] = sc.result.teams;
@@ -405,7 +527,7 @@
     ctx.globalAlpha = 1;
   }
   function draw(ctx, sc, now) {
-    drawBg(ctx);
+    drawBg(ctx, now, sc.scene);
     const order = Object.values(sc.units).sort((a, b) => a.y - b.y);
     order.filter(u => !u.alive).forEach(u => drawUnit(ctx, u, now));
     order.filter(u => u.alive).forEach(u => drawUnit(ctx, u, now));
@@ -433,6 +555,9 @@
         <span class="arena-msg" role="status"></span>
       </div>`;
     const cv = el.querySelector('canvas'), ctx = cv.getContext('2d');
+    // draw at the screen's real resolution (not 480x300 blown up), so names and numbers stay sharp; pixel art stays crisp
+    const K = Math.max(2, Math.min(4, Math.round(((el.clientWidth || W * 2) * (root.devicePixelRatio || 1)) / W)));
+    cv.width = W * K; cv.height = H * K; ctx.scale(K, K);
     ctx.imageSmoothingEnabled = false;
     // opts.endTitle / opts.endSub replace the "VICTORY" banner (used for best-of-3 rounds); opts.speed carries the speed across rounds
     const titled = s => { if (opts.endTitle) s.endTitle = opts.endTitle; if (opts.endSub) s.endSub = opts.endSub; return s; };
