@@ -86,8 +86,9 @@ async function updateReplays(out, previous, roster, now) {
   Object.keys(out.parseQueue).forEach(id => { if (!games.has(id)) delete out.parseQueue[id]; });
   const budget = calls + PARSE_CALLS_PER_RUN;
   let read = 0, asked = 0, waiting = 0;
-  // oldest games first, so their replays are fetched before they expire
-  for (const [id, at] of [...games].sort((a, b) => a[1] - b[1])) {
+  // newest games first, so players see unlocks from the game they just played; older games follow on later runs
+  // (OpenDota keeps replays for about two weeks, and games older than GIVE_UP_AFTER are skipped)
+  for (const [id, at] of [...games].sort((a, b) => b[1] - a[1])) {
     if (calls >= budget) { waiting++; continue; }
     const q = out.parseQueue[id] || { n: 0, t: 0 };
     if (q.n && now - q.t < RECHECK_AFTER) { waiting++; continue; }
