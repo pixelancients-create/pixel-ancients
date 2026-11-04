@@ -1447,7 +1447,9 @@
       const anchor = isLast ? 'end' : i === 0 ? 'start' : 'middle', tx = isLast ? Wd : i === 0 ? L : L + i * bw + bw / 2;
       return `<text x="${tx}" y="${Hc + 16}" text-anchor="${anchor}" fill="#8e8981" font-size="11">${isLast ? 'Today' : fmtD(d.day)}</text>`; }).join('');
     const chart = `<div class="vchart"><div class="ttl">Unique visitors per day · last 30 days</div><svg viewBox="0 -2 ${Wd} ${Hc + 22}" role="img" aria-label="Unique visitors per day over the last 30 days">${grid}<line x1="${L}" x2="${Wd}" y1="${Hc}" y2="${Hc}" stroke="rgba(255,255,255,.18)"/>${bars}${ticks}</svg><div class="tip" role="status"></div></div>`;
-    const pages = (st.pages || []).slice(0, 7);
+    // every tracked page, busiest first; pages nobody has opened yet show 0 (the hidden calibrate page only if visited)
+    const seen = new Set((st.pages || []).map(pg => pg.page));
+    const pages = (st.pages || []).concat(VISIT_PAGES.filter(v => !seen.has(v) && v !== 'calibrate' && VIEWS.includes(v)).map(v => ({ page: v, views: 0, visitors: 0 })));
     const pagesTbl = `<table class="table"><thead><tr><th>Page · last 30 days</th><th class="r">Views</th><th class="r">Visitors</th></tr></thead><tbody>${pages.length ? pages.map(pg => `<tr><td>${esc(PAGE_NAME[pg.page] || pg.page)}</td><td class="r num">${n(pg.views)}</td><td class="r num">${n(pg.visitors)}</td></tr>`).join('') : '<tr><td colspan="3">No visits yet.</td></tr>'}</tbody></table>`;
     const joined = `<div class="vjoin"><div class="eyebrow">Visitors who joined</div><p><b>${n(st.linked_week)}</b> linked a Dota account in the last 7 days</p><p><b>${n(st.linked_month)}</b> in the last 30 days</p><p><b>${n(st.linked_all)}</b> linked in total</p></div>`;
     return head + `<div class="vstats">${tiles}</div>${chart}<div class="vrow">${pagesTbl}${joined}</div>`;
