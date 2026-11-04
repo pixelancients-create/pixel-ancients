@@ -947,7 +947,7 @@
       const { D } = pen(g); [[3, 5], [27, 7], [2, 21], [28, 23]].forEach(([x, y]) => D([[x, y], [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]], '#c8f5a0'));
     },
     rampage_aura: (g, f) => {
-      ring(g, ['#7a1d12', '#ff5a3d', '#ffd0a0'], f, true);
+      ring(g, ['#5a130d', '#34363d', '#ff5a3d'], f, true);   // dark ember: smoky black ring, deep red outer edge, red sparks
       const { P } = pen(g);
       for (let i = 0; i < 10; i++) {
         const a = (i / 10) * Math.PI * 2 + f * 0.16, r = 15 + ((i + f) % 2) * 1.5;
