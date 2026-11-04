@@ -45,7 +45,7 @@ window.LEAGUE_CONFIG = {
     fightDays: [6, 0],              // 6 = Saturday, 0 = Sunday
     fightHour: 21,                  // 9pm league time (the Supabase schedule must match, see README)
     minMembers: 3,                  // smaller guilds sit out; empty slots are filled by Lane Creep bots
-    underdog: 0.30,                 // weaker guild gets this x the power gap as +% attack and HP (0 = off)
+    underdog: 0.35,                 // weaker guild gets this x the power gap as +% attack and HP (0 = off)
     switchCooldown: false,           // after leaving a guild, a player can't fight for a new one until the next Monday
   },
 
