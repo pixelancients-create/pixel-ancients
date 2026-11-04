@@ -246,8 +246,8 @@
     creep: { skin: 1, hair: 'short', hairColor: 0, tunic: 1, head: 'tower_helm', body: 'tunic', cape: 'none', weapon: 'training_sword', offhand: 'creep_buckler', boots: 'none', pet: 'none', aura: 'none' },
     guardian: { skin: 3, hair: 'mohawk', hairColor: 4, tunic: 4, head: 'unbroken_helm', body: 'offlane_plate', cape: 'radiant_banner', weapon: 'throne_breaker', offhand: 'none', boots: 'rat_treads', pet: 'none', aura: 'none' },
   };
-  const CAST_NAME = { nuke: 'Nuke!', wombo: 'Wombo Combo!', waveClear: 'Wave Clear!', stomp: 'Stomp!', heal: 'Heal', healAll: 'Mass Heal', hex: 'Hex!', blink: 'Blink!' };
-  const RUNE_NAME = { dd: 'Double Damage', haste: 'Haste', regen: 'Regen' };
+  const CAST_NAME = { nuke: 'Nuke!', wombo: 'Wombo Combo!', waveClear: 'Wave Clear!', stomp: 'Stomp!', heal: 'Heal', healAll: 'Mass Heal', hex: 'Hex!', blink: 'Blink!', silence: 'Silence!', fizzle: 'Fizzled', resist: 'Resisted', wipe: 'Team Wipe!', harden: 'Harden!', arcane: 'Arcane!', glimmer: 'Glimmer', courier: 'Courier', bottle: 'Bottle' };
+  const RUNE_NAME = { dd: 'Double Damage', haste: 'Haste', regen: 'Regen', water: 'Water' };
   const FONT = '"Fira Sans", system-ui, sans-serif';
 
   // ---------- scene state ----------

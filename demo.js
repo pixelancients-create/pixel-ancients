@@ -118,6 +118,21 @@ window.LEAGUE_DEMO = {
     const taunts = {};
     members.forEach(m => { if (lines[m.name]) taunts[m.id] = { taunt: lines[m.name][0], tauntAnim: lines[m.name][1] }; });
 
+    // XPM and replay stats (wards, runes, Aegis...): drawn from each game's own number so the rest of the sample stays the same
+    const hr = (id, k) => { let h = (id * 2654435761 + k * 40503) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+    const parsed = {};
+    for (const m of members) for (const r of raw[m.id]) {
+      const role = roles[m.id], won = (r.player_slot < 128) === r.radiant_win, mins = r.duration / 60, k = r.match_id;
+      r.xp_per_min = Math.round(r.gold_per_min * (1.05 + hr(k, m.id % 97) * 0.35));
+      if (hr(k, 1) > 0.75) continue;                                       // about a quarter of games never get parsed
+      const sup = 1 - role, q = j => hr(k, m.id % 1000 + j);
+      const pr = parsed[k] || (parsed[k] = { t: r.start_time + r.duration + 5400, s: r.start_time, p: {} });
+      pr.p[m.id] = { obs: Math.round(sup * mins / 3 * q(2)), sen: Math.round(sup * mins / 4 * q(3)), wk: Math.round(mins / 12 * q(4)),
+        ult: q(5) < 0.05 + role * 0.08 ? 1 : 0, ram: q(6) < 0.01 + role * 0.03 ? 1 : 0,
+        dt: Math.round((15000 + (1 - Math.abs(role - 0.6)) * 30000 * q(7)) * mins / 30), run: Math.round(mins / 6 * (0.4 + q(8))),
+        bty: Math.round(mins / 12 * q(9) * (1 + sup)), arc: q(10) < 0.25 ? 1 : 0, wat: q(11) < 0.3 ? 1 : 0, aeg: won && role > 0.6 && q(12) < 0.18 ? 1 : 0, ps: r.party_size || 1 };
+    }
+
     // guilds: four made-up guilds (one too small to fight) and the Fight Nights already played
     const byName = n => members.find(m => m.name === n);
     const did = m => 'demo:' + m.id;
@@ -138,6 +153,6 @@ window.LEAGUE_DEMO = {
     }
     const snapshots = fightAt.map(at => ({ id: new Date((at + tz * 3600) * 1000).toISOString().slice(0, 10), at,
       data: { guilds: guilds.map(g => ({ id: g.id, name: g.name, tag: g.tag, crest: g.crest, captain: g.captain, members: g.members })), loadouts: {} } }));
-    return { members, heroes, raw, league, now, taunts, guilds, invites, snapshots };
+    return { members, heroes, raw, league, now, taunts, guilds, invites, snapshots, parsed };
   },
 };

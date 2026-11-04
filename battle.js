@@ -38,6 +38,11 @@
     tormentor_horns: { a: 'thorns', p: 30 },
     weekly_crown: { a: 'command', p: 8 },
     mega_creeps_crown: { a: 'enrage', p: 60 },
+    kill_cap: { a: 'greed', p: 4 },
+    xp_visor: { a: 'execute', p: 45 },
+    signature_helm: { a: 'silence', p: 1 },
+    marathon_crown: { a: 'enrage', p: 45 },
+    team_wipe_crown: { a: 'wipe', p: 30 },
     // body
     tunic: {},
     feeder_bib: { a: 'revive', p: 20 },
@@ -52,6 +57,12 @@
     comeback_cuirass: { a: 'rage', p: 65 },
     champion_mail: { a: 'hardCarry', p: 4 },
     pos1_silk: { a: 'lifesteal', p: 32 },
+    team_jersey: { a: 'block', p: 15 },
+    turbo_jumpsuit: { a: 'doubleStrike', p: 15 },
+    draft_armor: { a: 'guard', p: 25 },
+    punching_bag_plate: { a: 'tough', p: 15 },
+    million_plate: { a: 'critMaster', p: 12 },
+    unkillable_carapace: { a: 'harden', p: 35 },
     // cape
     tango_wrap: { a: 'regen', p: 3 },
     gank_cloak: { a: 'backstab', p: 35 },
@@ -62,6 +73,12 @@
     stomp_cape: { a: 'stomp', p: 85 },
     sunfire_cape: { a: 'burn', p: 5 },
     defender_mantle: { a: 'ancient' },
+    weekend_cape: { a: 'warcry', p: 6 },
+    duo_banner: { a: 'bond', p: 12 },
+    arcane_mantle: { a: 'arcane', p: 40 },
+    farmer_mantle: { a: 'farm', p: 10 },
+    multikill_mantle: { a: 'frenzy', p: 100 },
+    perfect_week_cloak: { a: 'command', p: 6 },
     // weapon
     training_sword: {},
     lasthit_dagger: { a: 'execute', p: 60 },
@@ -85,12 +102,26 @@
     hex_talisman: { a: 'hex' },
     tank_bulwark: { a: 'taunt' },
     second_life_shield: { a: 'revive', p: 60 },
+    tango_pouch: { a: 'regen', p: 3 },
+    mana_charm: { a: 'spellShield', p: 3 },
+    humility_urn: { a: 'urn', p: 25 },
+    ward_satchel: { a: 'vision', p: 5 },
+    glimmer_lantern: { a: 'glimmer', p: 30 },
+    bounty_purse: { a: 'purse', p: 2.5 },
+    aegis_buckler: { a: 'revive', p: 45 },
     // boots
     tp_sandals: { a: 'tp' },
     rotation_boots: { a: 'haste', p: 0.6 },
     juke_boots: { a: 'evasion', p: 8 },
     rat_treads: { a: 'backdoor', p: 30 },
     backdoor_greaves: { a: 'blink', p: 110 },
+    morning_jog: { a: 'tp' },
+    courier_slippers: { a: 'courier', p: 10 },
+    phase_steps: { a: 'evasion', p: 5 },
+    dewarder_boots: { a: 'shieldBreak', p: 150 },
+    deny_dancer: { a: 'counter', p: 25 },
+    water_waders: { a: 'water', p: 30 },
+    siege_treads: { a: 'siege', p: 50 },
     // pets (the pet attacks after its owner)
     lucky_cat: { a: 'bounty', p: 40 },
     lane_frog: {},
@@ -104,6 +135,13 @@
     one_trick_pony: { a: 'petFocus', p: 80 },
     ember_drake: { a: 'petBreath', p: 50 },
     drop_mimic: { a: 'petChomp', p: 100 },
+    lunch_lizard: { a: 'bounty', p: 25 },
+    tilt_kitten: { a: 'tilt', p: 8 },
+    sentry_owl: { a: 'petReveal', p: 3 },
+    solo_sloth: { a: 'loneWolf', p: 35 },
+    bottle_crab: { a: 'petBottle', p: 30 },
+    stack_parrot: { a: 'packBonus', p: 30 },
+    pool_hydra: { a: 'hydra', p: 70 },
     // auras: whole team. The same aura twice doesn't stack (like Dota).
     fountain_glow: { aura: { regen: 2 } },
     leafstorm: { aura: { spd: 1 } },
@@ -184,6 +222,27 @@
     petFocus: p => `Pet locks onto one enemy for +${p}% damage`,
     petBreath: p => `Pet breathes on every enemy for ${p}%`,
     petChomp: p => `Pet bites for +${p}% and may stun`,
+    silence: () => 'Every 4th turn silences the strongest enemy: its next special move fizzles',
+    wipe: p => `After each kill, hits every enemy for ${p}%`,
+    tough: p => `Takes ${p}% less damage from every hit`,
+    harden: p => `The first time it drops below half HP, gains a shield worth ${p}% of its max HP`,
+    bond: p => `It and the ally beside it get +${p}% attack while both stand`,
+    arcane: p => `Every 4th attack is magic (ignores most armor) and deals +${p}%`,
+    frenzy: p => `Each kill brings its next turn ${p}% sooner`,
+    spellShield: p => `Shrugs off the first ${p} stuns, hexes or silences. Magic hurts it 25% less`,
+    urn: p => `Whenever anyone falls, heals the weakest ally ${p} HP`,
+    vision: p => `Enemies lose ${p}% dodge`,
+    glimmer: p => `Every 4th turn cloaks the weakest ally: it dodges the next hit and heals ${p} HP`,
+    purse: p => `Every enemy that falls gives the whole team +${p} attack`,
+    courier: p => `Every 4th turn sends a salve: the weakest ally heals ${p} HP a turn for 3 turns`,
+    shieldBreak: p => `Attacks smash shields (+${p}% damage to shields)`,
+    water: p => `Once, below 40% HP, drinks a water rune and heals ${p}% of its max HP`,
+    tilt: p => `Owner +${p}% attack for every ally that falls`,
+    petReveal: p => `Pet hits never miss and strip ${p}% dodge (up to ${p * 4}%)`,
+    loneWolf: p => `Owner +${p}% attack while its side is outnumbered`,
+    petBottle: p => `Every 4th turn the pet refills a bottle: owner heals ${p} HP`,
+    packBonus: p => `Pet hits +${p}% for every other pet on the team`,
+    hydra: p => `Pet also bites a second enemy for ${p}%`,
   };
   const AURA_TEXT = {
     regen: v => `Team heals ${v} HP a turn`, spd: v => `Team +${v} speed`, firstBlood: v => `Team +${v}% attack after the first kill`,
@@ -257,6 +316,7 @@
       if (P && P.a === 'petNight') { u.eva += P.p; P.dmg *= 1.25; }
       if (P && P.a === 'petSight') u.ab.trueSight = 1;
       if (P && P.a === 'creepBlock') u.ab.shield = (u.ab.shield || 0) + P.p;
+      if (P && (P.a === 'tilt' || P.a === 'loneWolf')) u.ab[P.a] = P.p;
       if (u.ab.taunt) u.ab.shield = (u.ab.shield || 0) + 100;
       if (u.ab.evasion) u.eva += u.ab.evasion;
       if (u.ab.critMaster) { u.crit += u.ab.critMaster; u.critMul = 2.6; }
@@ -325,7 +385,7 @@
 
     // team effects: auras (unique ids), item team buffs, runes
     for (const t of T) {
-      const fx = { atkPct: 0, armor: 0, spd: 0, eva: 0, crit: 0, regen: 0, shield: 0, lifesteal: 0, firstBlood: 0, lowHeal: 0, killStack: 0, late: 0, warcry: 0, rally: 0 };
+      const fx = { atkPct: 0, armor: 0, spd: 0, eva: 0, crit: 0, regen: 0, shield: 0, lifesteal: 0, firstBlood: 0, lowHeal: 0, killStack: 0, late: 0, warcry: 0, rally: 0, vision: 0 };
       const ids = [...new Set(t.units.flatMap(u => u.auras))];
       ids.forEach(id => Object.entries(ITEMS[id].aura).forEach(([k, v]) => { fx[k] += v; }));
       t.units.forEach(u => {
@@ -334,6 +394,7 @@
         if (u.ab.haste) fx.spd += u.ab.haste;
         if (u.ab.warcry) fx.warcry += u.ab.warcry;
         if (u.ab.rally) fx.rally += u.ab.rally;
+        if (u.ab.vision) fx.vision += u.ab.vision;
       });
       t.runes.forEach(r => RUNES[r] && Object.entries(RUNES[r].fx).forEach(([k, v]) => { fx[k] += v; }));
       const other = T[t.side === 'a' ? 1 : 0];
@@ -345,9 +406,17 @@
         u.shield = (u.ab.shield || 0) + fx.shield;
         u.gauge = R() * 30 + (u.ab.tp ? 60 : 0);
         Object.assign(u, { actions: 0, kills: 0, stacksAtk: 0, flatAtk: 0, slow: 0, stun: 0, dots: [], dodged: 0, revived: false, lowHealed: false,
-          dealt: 0, healed: 0, taken: 0, spdBonus: 0 });
+          dealt: 0, healed: 0, taken: 0, spdBonus: 0, farmAtk: 0, evaDebuff: 0, silenced: 0, resist: u.ab.spellShield || 0, hardened: false, drank: false, glim: false, bondIn: [] });
       });
     }
+    // Duo Banner: pairs with the ally beside it (same line), else the nearest ally
+    for (const u of all) if (u.ab.bond) {
+      const mates = teamOf(u).units.filter(x => x !== u);
+      const side = mates.filter(x => x.row === u.row && Math.abs(x.col - u.col) === 1);
+      const mate = (side.length ? side : mates).slice().sort((a, b) => Math.abs(a.pos - u.pos) - Math.abs(b.pos - u.pos) || a.pos - b.pos)[0];
+      if (mate) { u.bondWith = mate; mate.bondIn.push(u); }
+    }
+    const pending = [];                                             // Team Wipe follow-ups, run after the current turn
     const early = () => n < 40, late = () => n > 60;
     const atkOf = u => {
       const t = teamOf(u), fx = t.fx;
@@ -356,11 +425,15 @@
         + enemiesOf(u).kills * COMEBACK;                         // comeback: each fallen ally makes the rest hit harder
       if (u.ab.rage && u.hp < u.maxHp * 0.4) pct += u.ab.rage;
       if (u.ab.hardCarry) pct += Math.min(60, u.ab.hardCarry * u.actions);
-      return (u.atk + u.flatAtk) * (1 + pct / 100);
+      if (u.ab.bond && u.bondWith && u.bondWith.hp > 0) pct += u.ab.bond;
+      u.bondIn.forEach(x => { if (x.hp > 0) pct += x.ab.bond; });
+      if (u.ab.tilt) pct += enemiesOf(u).kills * u.ab.tilt;
+      if (u.ab.loneWolf && alive(t).length < alive(enemiesOf(u)).length) pct += u.ab.loneWolf;
+      return (u.atk + u.flatAtk + u.farmAtk) * (1 + pct / 100);
     };
     const armorOf = u => u.armor + teamOf(u).fx.armor + (early() ? teamOf(u).fx.rally : 0) + (u.ab.lastStand && u.hp < u.maxHp * 0.3 ? u.ab.lastStand : 0);
     const spdOf = u => Math.max(u.spd * 0.5, u.spd + teamOf(u).fx.spd + u.spdBonus - u.slow);
-    const evaOf = u => Math.min(45, u.eva + teamOf(u).fx.eva);
+    const evaOf = u => Math.max(0, Math.min(45, u.eva + teamOf(u).fx.eva) - enemiesOf(u).fx.vision - u.evaDebuff);
     const critOf = u => u.crit + teamOf(u).fx.crit;
 
     function heal(u, v, src) {
@@ -369,6 +442,13 @@
       if (h <= 0) return;
       u.hp += h; if (src) src.healed += h;
       log({ k: 'heal', t: u.key, v: h, h: u.hp });
+    }
+
+    // returns true when the stun lands
+    function stunT(t, kind) {
+      if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); return false; }
+      if (kind === 'hex') t.stun = Math.max(t.stun, 1); else { t.stun = 1; log({ k: 'stun', t: t.key }); }
+      return true;
     }
 
     function die(u, src) {
@@ -389,11 +469,16 @@
       enemy.kills++;
       if (!enemy.firstBloodOn) enemy.firstBloodOn = true;
       if (u.ab.gg) t.units.forEach(x => { if (x.hp > 0) x.stacksAtk += u.ab.gg; });
+      const purse = alive(enemy).reduce((s, x) => s + (x.ab.purse || 0), 0);
+      if (purse) alive(enemy).forEach(x => { x.flatAtk += purse; });
+      all.forEach(x => { if (x.hp > 0 && x.ab.urn) heal(weakestAlly(x), x.ab.urn, x); });
       if (src && src.hp > 0) {
         src.kills++;
         if (src.ab.greed) src.flatAtk += src.ab.greed;
         if (src.ab.rampage) src.stacksAtk += src.ab.rampage;
         if (src.ab.momentum) src.spdBonus += src.ab.momentum;
+        if (src.ab.frenzy) src.gauge += src.ab.frenzy;
+        if (src.ab.wipe && !src.wiping && !pending.includes(src)) pending.push(src);
         if (src.pet && src.pet.a === 'bounty') heal(src, src.pet.p, src);
       }
     }
@@ -405,16 +490,24 @@
         const guard = teamOf(t).units.find(x => x !== t && x.hp > 0 && x.ab.guard);
         if (guard && kind !== 'dot') { const part = Math.round(dmg * Math.min(60, guard.ab.guard) / 100); dmg -= part; applyRaw(guard, part * 0.6, src, 'guard'); }
       }
+      if (t.ab.tough && kind !== 'dot') dmg *= 1 - t.ab.tough / 100;
       return applyRaw(t, dmg, src, kind);
     }
     function applyRaw(t, dmg, src, kind) {
       if (t.hp <= 0) return 0;
       let d = Math.max(1, Math.round(dmg));
-      if (t.shield > 0) { const s = Math.min(t.shield, d); t.shield -= s; d -= s; }
+      if (t.shield > 0) {
+        const mul = src && src.ab.shieldBreak && kind !== 'dot' ? 1 + src.ab.shieldBreak / 100 : 1;
+        const s = Math.min(t.shield, d * mul); t.shield -= s; d -= Math.round(s / mul);
+      }
       t.hp -= d; t.taken += d; if (src) src.dealt += d;
       if (kind === 'guard') log({ k: 'guard', t: t.key, d, h: Math.max(0, t.hp) });
       if (t.hp <= 0) die(t, src);
-      else if (!t.lowHealed && teamOf(t).fx.lowHeal && t.hp < t.maxHp / 2) { t.lowHealed = true; heal(t, teamOf(t).fx.lowHeal); }
+      else {
+        if (!t.lowHealed && teamOf(t).fx.lowHeal && t.hp < t.maxHp / 2) { t.lowHealed = true; heal(t, teamOf(t).fx.lowHeal); }
+        if (t.ab.harden && !t.hardened && t.hp < t.maxHp / 2) { t.hardened = true; t.shield += Math.round(t.maxHp * t.ab.harden / 100); log({ k: 'cast', u: t.key, a: 'harden' }); }
+        if (t.ab.water && !t.drank && t.hp < t.maxHp * 0.4) { t.drank = true; log({ k: 'rune', u: t.key, r: 'water' }); heal(t, t.maxHp * t.ab.water / 100, t); }
+      }
       return d;
     }
 
@@ -422,6 +515,7 @@
       const r = { miss: false, crit: false, block: false, d: 0 };
       const sight = s.ab.trueSight || opts2.sure;
       if (!sight) {
+        if (t.glim) { t.glim = false; r.miss = true; return r; }
         if (t.ab.dodgeFirst && t.dodged < t.ab.dodgeFirst) { t.dodged++; r.miss = true; return r; }
         if (R() * 100 < evaOf(t)) { r.miss = true; return r; }
       }
@@ -432,7 +526,7 @@
       if (s.ab.counterpick && t.power === Math.max(...alive(enemiesOf(s)).map(x => x.power))) d *= 1 + s.ab.counterpick / 100;
       if (R() * 100 < critOf(s)) { d *= s.critMul; r.crit = true; }
       let arm = armorOf(t);
-      if (s.type === 'magic' || opts2.magic) arm *= 0.3;
+      if (s.type === 'magic' || opts2.magic) { arm *= 0.3; if (t.ab.spellShield) d *= 0.75; }
       if (s.ab.siege) arm *= 1 - Math.min(90, s.ab.siege) / 100;
       d *= 100 / (100 + Math.max(0, arm) * 6);
       if (t.ab.block && R() * 100 < t.ab.block) { d *= 0.5; r.block = true; }
@@ -486,6 +580,7 @@
       for (const d of u.dots.slice()) {
         if (u.hp <= 0) break;
         const src = all.find(x => x.key === d.src);
+        if (d.kind === 'hot') { heal(u, d.v, src); d.left--; continue; }
         const dealt = applyRaw(u, d.v, src, 'dot');
         log({ k: 'dot', t: u.key, d: dealt, kind: d.kind, h: Math.max(0, u.hp) });
         d.left--;
@@ -494,38 +589,54 @@
       if (u.hp <= 0) return;
       const regen = (u.ab.regen || 0) + teamOf(u).fx.regen;
       if (regen && u.hp < u.maxHp) heal(u, regen, u);
-      if (u.ab.farm) u.flatAtk = Math.min(u.ab.farm, u.flatAtk + 1);
+      if (u.ab.farm) u.farmAtk = Math.min(u.ab.farm, u.farmAtk + 1);
       if (u.stun > 0) { u.stun--; log({ k: 'stunned', u: u.key }); return; }
 
+      // a silenced hero's next special move fizzles
+      const can = () => { if (!u.silenced) return true; u.silenced = 0; log({ k: 'cast', u: u.key, a: 'fizzle' }); return false; };
       // support actions on top of the attack
-      if (u.ab.heal && u.actions % 3 === 0) { const t = weakestAlly(u); log({ k: 'cast', u: u.key, a: 'heal' }); heal(t, u.ab.heal, u); }
-      if (u.ab.healAll && u.actions % 5 === 0) { log({ k: 'cast', u: u.key, a: 'healAll' }); alive(teamOf(u)).forEach(t => heal(t, u.ab.healAll, u)); }
-      if (u.ab.hex && u.actions % 4 === 0) {
+      if (u.ab.silence && u.actions % 4 === 0) {
+        const foes = alive(enemiesOf(u)).filter(x => !x.silenced);
+        const casters = foes.filter(x => x.ab.heal || x.ab.healAll || x.ab.hex || x.ab.nuke || x.ab.wombo || x.ab.waveClear || x.ab.stomp || x.ab.glimmer || x.ab.courier || x.ab.silence);
+        const pool = casters.length ? casters : foes;
+        if (pool.length) {
+          const t = pool.reduce((a, b) => (b.power > a.power ? b : a));
+          log({ k: 'cast', u: u.key, a: 'silence', t: t.key });
+          if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); } else t.silenced = 1;
+        }
+      }
+      if (u.ab.glimmer && u.actions % 4 === 0 && can()) { const t = weakestAlly(u); t.glim = true; log({ k: 'cast', u: u.key, a: 'glimmer', t: t.key }); heal(t, u.ab.glimmer, u); }
+      if (u.ab.courier && u.actions % 4 === 0 && can()) { const t = weakestAlly(u); log({ k: 'cast', u: u.key, a: 'courier', t: t.key }); t.dots.push({ v: u.ab.courier, left: 3, src: u.key, kind: 'hot' }); }
+      if (u.ab.heal && u.actions % 3 === 0 && can()) { const t = weakestAlly(u); log({ k: 'cast', u: u.key, a: 'heal' }); heal(t, u.ab.heal, u); }
+      if (u.ab.healAll && u.actions % 5 === 0 && can()) { log({ k: 'cast', u: u.key, a: 'healAll' }); alive(teamOf(u)).forEach(t => heal(t, u.ab.healAll, u)); }
+      if (u.ab.hex && u.actions % 4 === 0 && can()) {
         const foes = alive(enemiesOf(u));
-        if (foes.length) { const t = foes.reduce((a, b) => (b.power > a.power ? b : a)); t.stun = Math.max(t.stun, 1); log({ k: 'cast', u: u.key, a: 'hex', t: t.key }); }
+        if (foes.length) { const t = foes.reduce((a, b) => (b.power > a.power ? b : a)); log({ k: 'cast', u: u.key, a: 'hex', t: t.key }); stunT(t, 'hex'); }
       }
 
       // damage specials replace the normal attack on their turn
       const foes = alive(enemiesOf(u));
       if (!foes.length) return;
-      if (u.ab.nuke && u.actions % 3 === 0) {
+      if (u.ab.nuke && u.actions % 3 === 0 && can()) {
         const t = foes.reduce((a, b) => (b.hp < a.hp ? b : a));
         log({ k: 'cast', u: u.key, a: 'nuke', t: t.key }); strike(u, t, u.ab.nuke / 100, 'nuke', { magic: true, sure: true, noRetaliate: true });
-      } else if (u.ab.wombo && u.actions % 5 === 0) {
+      } else if (u.ab.wombo && u.actions % 5 === 0 && can()) {
         log({ k: 'cast', u: u.key, a: 'wombo' });
-        foes.forEach(t => { strike(u, t, u.ab.wombo / 100, 'wombo', { noRetaliate: true }); if (t.hp > 0 && R() < 0.3) { t.stun = 1; log({ k: 'stun', t: t.key }); } });
-      } else if (u.ab.waveClear && u.actions % 3 === 0) {
+        foes.forEach(t => { strike(u, t, u.ab.wombo / 100, 'wombo', { noRetaliate: true }); if (t.hp > 0 && R() < 0.3) stunT(t);  });
+      } else if (u.ab.waveClear && u.actions % 3 === 0 && can()) {
         log({ k: 'cast', u: u.key, a: 'waveClear' }); foes.forEach(t => strike(u, t, u.ab.waveClear / 100, 'waveClear', { noRetaliate: true }));
-      } else if (u.ab.stomp && u.actions % 4 === 0) {
+      } else if (u.ab.stomp && u.actions % 4 === 0 && can()) {
         const front = foes.filter(t => t.row === 0); const hitList = front.length ? front : foes;
         log({ k: 'cast', u: u.key, a: 'stomp' });
-        hitList.forEach(t => { strike(u, t, u.ab.stomp / 100, 'stomp', { noRetaliate: true }); if (t.hp > 0 && R() < 0.25) { t.stun = 1; log({ k: 'stun', t: t.key }); } });
+        hitList.forEach(t => { strike(u, t, u.ab.stomp / 100, 'stomp', { noRetaliate: true }); if (t.hp > 0 && R() < 0.25) stunT(t);  });
       } else {
         let t, mult = 1, tag;
         if (u.ab.blink && u.actions === 1) { t = foes.reduce((a, b) => (b.hp < a.hp ? b : a)); mult += u.ab.blink / 100; tag = 'blink'; log({ k: 'cast', u: u.key, a: 'blink', t: t.key }); }
         else t = pickTarget(u);
         if (u.ab.firstStrike && u.actions === 1) { mult += u.ab.firstStrike / 100; tag = tag || 'firstStrike'; }
-        strike(u, t, mult, tag);
+        const o = {};
+        if (u.ab.arcane && u.actions % 4 === 0) { mult += u.ab.arcane / 100; o.magic = true; tag = tag || 'arcane'; log({ k: 'cast', u: u.key, a: 'arcane', t: t.key }); }
+        strike(u, t, mult, tag, o);
         if (u.ab.cleave) {
           const side = alive(enemiesOf(u)).filter(x => x !== t && x.row === t.row && Math.abs(x.col - t.col) === 1);
           side.forEach(x => strike(u, x, u.ab.cleave / 100, 'cleave', { noRetaliate: true }));
@@ -541,6 +652,7 @@
         if (u.ab.wardHeal) heal(weakestAlly(u), u.ab.wardHeal, u);
       }
 
+      runPending();
       // the pet follows up
       const P = u.pet;
       if (P && u.hp > 0) {
@@ -551,14 +663,17 @@
             if (r === 'dd') u.stacksAtk += 12; else if (r === 'haste') u.spdBonus += 2; else heal(u, 35, u);
             log({ k: 'rune', u: u.key, r });
           }
+          if (P.a === 'petBottle' && u.actions % 4 === 0 && u.hp < u.maxHp) { log({ k: 'cast', u: u.key, a: 'bottle' }); heal(u, P.p, u); }
           const hitPet = (t, mult, tag) => {
-            if (R() * 100 < evaOf(t) * 0.5) { log({ k: 'pet', s: u.key, t: t.key, miss: true }); return; }
+            if (P.a !== 'petReveal' && R() * 100 < evaOf(t) * 0.5) { log({ k: 'pet', s: u.key, t: t.key, miss: true }); return; }
             let d = P.dmg * mult * (0.85 + R() * 0.3);
+            if (P.a === 'packBonus') d *= 1 + P.p / 100 * alive(teamOf(u)).filter(x => x !== u && x.pet).length;
             d *= 100 / (100 + Math.max(0, armorOf(t)) * 6);
             const dealt = damage(t, d, u, 'pet');
             log({ k: 'pet', s: u.key, t: t.key, d: dealt, a: tag, h: Math.max(0, t.hp) });
             if (t.hp > 0 && P.a === 'petSlow') t.slow = Math.min(t.spd * 0.4, t.slow + P.p);
-            if (t.hp > 0 && ((P.a === 'petStun' && R() * 100 < P.p) || (P.a === 'petChomp' && R() < 0.2))) { t.stun = 1; log({ k: 'stun', t: t.key }); }
+            if (t.hp > 0 && P.a === 'petReveal') t.evaDebuff = Math.min(P.p * 4, t.evaDebuff + P.p);
+            if (t.hp > 0 && ((P.a === 'petStun' && R() * 100 < P.p) || (P.a === 'petChomp' && R() < 0.2))) stunT(t);
           };
           if (P.a === 'petBreath') pf.forEach(t => hitPet(t, P.p / 100, 'breath'));
           else {
@@ -566,8 +681,21 @@
             if (P.a === 'petFocus') { if (!P.focus || P.focus.hp <= 0) P.focus = pf.reduce((a, b) => (b.power > a.power ? b : a)); t = P.focus; }
             else t = pf[Math.floor(R() * pf.length)];
             hitPet(t, P.a === 'petFocus' || P.a === 'petChomp' ? 1 + P.p / 100 : 1);
+            if (P.a === 'hydra') { const t2 = alive(enemiesOf(u)).filter(x => x !== t); if (t2.length) hitPet(t2[Math.floor(R() * t2.length)], P.p / 100, 'hydra'); }
           }
         }
+      }
+    }
+
+    function runPending() {
+      while (pending.length) {
+        const w = pending.shift();
+        const foes = alive(enemiesOf(w));
+        if (w.hp <= 0 || !foes.length) continue;
+        log({ k: 'cast', u: w.key, a: 'wipe' });
+        w.wiping = true;
+        foes.forEach(t => strike(w, t, w.ab.wipe / 100, 'wipe', { noRetaliate: true }));
+        w.wiping = false;
       }
     }
 
@@ -579,6 +707,7 @@
         if (u.hp <= 0) continue;
         u.gauge -= 100;
         act(u);
+        runPending();
         const aAlive = alive(T[0]).length, bAlive = alive(T[1]).length;
         if (!aAlive || !bAlive) { winner = aAlive ? 0 : 1; break outer; }
         if (n >= MAX_ACTIONS) break outer;

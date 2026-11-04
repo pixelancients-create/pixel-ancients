@@ -39,15 +39,20 @@
       { id: 'gg_mask', name: 'GG Mask', rarity: 'common', stat: 'losses', need: 10 },
       { id: 'last_pick_hood', name: 'Last Pick Hood', rarity: 'common', stat: 'heroesInWeek', need: 5 },
       { id: 'pathfinder_goggles', name: 'Hero Pool Goggles', rarity: 'common', stat: 'heroesPlayed', need: 10 },
+      { id: 'kill_cap', name: 'Kill Count Cap', rarity: 'common', stat: 'totalKills', need: 150 },
       { id: 'tower_helm', name: 'Tower Dive Helm', rarity: 'rare', stat: 'seasonPoints', need: 175 },
       { id: 'midlane_mask', name: 'Mid 1v1 Mask', rarity: 'rare', stat: 'wins', need: 15 },
       { id: 'night_owl_hood', name: 'Night Cycle Hood', rarity: 'rare', stat: 'nightGames', need: 10 },
       { id: 'gpm_circlet', name: 'Gold Advantage Circlet', rarity: 'rare', stat: 'bestGpm', need: 1200 },
+      { id: 'xp_visor', name: 'Experience Visor', rarity: 'rare', stat: 'bestXpm', need: 1000 },
       { id: 'rampage_helm', name: 'Rampage Helm', rarity: 'epic', stat: 'wins', need: 25 },
       { id: 'unbroken_helm', name: 'High Ground Helm', rarity: 'epic', stat: 'weekStreak', need: 4 },
       { id: 'tormentor_horns', name: 'Tormentor Horns', rarity: 'epic', stat: 'weekendWins', need: 20 },
+      { id: 'signature_helm', name: 'Signature Hero Helm', rarity: 'epic', stat: 'sameHeroWins', need: 10 },
       { id: 'weekly_crown', name: "Ancient's Crown", rarity: 'legendary', stat: 'weekWins', need: 1, animated: true },
       { id: 'mega_creeps_crown', name: 'Mega Creeps Crown', rarity: 'legendary', stat: 'longWin45', need: 1, animated: true },
+      { id: 'marathon_crown', name: 'Marathon Crown', rarity: 'legendary', stat: 'bestDayWins', need: 7, animated: true },
+      { id: 'team_wipe_crown', name: 'Team Wipe Crown', rarity: 'legendary', stat: 'rampages', need: 1, parsed: true, animated: true },
     ] },
     { id: 'body', name: 'Body', items: [
       { id: 'tunic', name: 'Recruit Tunic', rarity: 'starter', free: true },
@@ -55,26 +60,38 @@
       { id: 'weekend_vest', name: 'Pub Star Vest', rarity: 'common', stat: 'weekendGames', need: 15 },
       { id: 'farm_apron', name: 'Farm Simulator Apron', rarity: 'common', stat: 'totalLastHits', need: 1000 },
       { id: 'jungler_leathers', name: 'Jungle Farm Leathers', rarity: 'common', stat: 'games', need: 30 },
+      { id: 'team_jersey', name: 'Team Jersey', rarity: 'common', stat: 'partyGames', need: 10 },
       { id: 'support_robe', name: 'Position 5 Robe', rarity: 'rare', stat: 'kdaBonuses', need: 10 },
       { id: 'salve_robes', name: 'Healing Salve Robes', rarity: 'rare', stat: 'totalHealing', need: 15000 },
       { id: 'space_vest', name: 'Space Creator Vest', rarity: 'rare', stat: 'assistGames20', need: 20 },
+      { id: 'turbo_jumpsuit', name: 'Turbo Jumpsuit', rarity: 'rare', stat: 'turboGames', need: 60 },
       { id: 'offlane_plate', name: 'Offlane Plate', rarity: 'epic', stat: 'leagueGames', need: 10, noLeague: { stat: 'games', need: 60 } },
       { id: 'collector_coat', name: 'Flex Pick Coat', rarity: 'epic', stat: 'heroesPlayed', need: 25 },
       { id: 'comeback_cuirass', name: 'Comeback Cuirass', rarity: 'epic', stat: 'longWins35', need: 3 },
+      { id: 'draft_armor', name: 'Draft Day Armor', rarity: 'epic', stat: 'allpickGames', need: 25 },
+      { id: 'punching_bag_plate', name: 'Punching Bag Plate', rarity: 'epic', stat: 'bestDamageTaken', need: 40000, parsed: true },
       { id: 'champion_mail', name: 'Hard Carry Mail', rarity: 'legendary', stat: 'weekTop3', need: 3, animated: true },
       { id: 'pos1_silk', name: 'Pos 1 Silk', rarity: 'legendary', stat: 'bestHeroDamage', need: 60000, animated: true },
+      { id: 'million_plate', name: 'Million Damage Plate', rarity: 'legendary', stat: 'totalHeroDamage', need: 1000000, animated: true },
+      { id: 'unkillable_carapace', name: 'Unkillable Carapace', rarity: 'legendary', stat: 'bestDamageTakenWin', need: 60000, parsed: true, animated: true },
     ] },
     { id: 'cape', name: 'Cape', items: [
       { id: 'none', name: 'No Cape', rarity: 'starter', free: true },
       { id: 'tango_wrap', name: 'Tango Wrap', rarity: 'common', stat: 'assistGames10', need: 10 },
+      { id: 'weekend_cape', name: 'Weekend Warrior Cape', rarity: 'common', stat: 'fullWeekends', need: 2 },
       { id: 'gank_cloak', name: 'Smoke Gank Cloak', rarity: 'rare', stat: 'stacks', need: 10 },
       { id: 'comet_cape', name: 'Snowball Cape', rarity: 'rare', stat: 'winStreak', need: 5 },
       { id: 'scan_cloak', name: 'Scan Cloak', rarity: 'rare', stat: 'bestWeekGames', need: 20 },
+      { id: 'duo_banner', name: 'Duo Lane Banner', rarity: 'rare', stat: 'duoWins', need: 10 },
+      { id: 'arcane_mantle', name: 'Arcane Mantle', rarity: 'rare', stat: 'arcaneRunes', need: 15, parsed: true },
       { id: 'dire_banner', name: 'Dire War Banner', rarity: 'epic', stat: 'leagueGames', need: 5, noLeague: { stat: 'wins', need: 40 } },
       { id: 'radiant_banner', name: 'Radiant War Banner', rarity: 'epic', stat: 'leagueWins', need: 5, noLeague: { stat: 'wins', need: 25 } },
       { id: 'stomp_cape', name: 'Stomp Cape', rarity: 'epic', stat: 'fastWins', need: 10 },
+      { id: 'farmer_mantle', name: "Farmer's Mantle", rarity: 'epic', stat: 'totalGold', need: 500000 },
+      { id: 'multikill_mantle', name: 'Multi-Kill Mantle', rarity: 'epic', stat: 'ultraKills', need: 3, parsed: true },
       { id: 'sunfire_cape', name: 'Beyond Godlike Cape', rarity: 'legendary', stat: 'winStreak', need: 10, animated: true },
       { id: 'defender_mantle', name: 'Ancient Defender Mantle', rarity: 'legendary', stat: 'longWins40', need: 5, animated: true },
+      { id: 'perfect_week_cloak', name: 'Perfect Week Cloak', rarity: 'legendary', stat: 'bestWeekWins', need: 12, animated: true },
     ] },
     { id: 'weapon', name: 'Weapon', items: [
       { id: 'training_sword', name: 'Creep Sword', rarity: 'starter', free: true },
@@ -96,34 +113,55 @@
       { id: 'none', name: 'Empty Hand', rarity: 'starter', free: true },
       { id: 'creep_buckler', name: 'Creep Block Buckler', rarity: 'common', stat: 'deny5Games', need: 10 },
       { id: 'throw_gloves', name: 'Throw Gloves', rarity: 'common', stat: 'losses', need: 20 },
+      { id: 'tango_pouch', name: 'Tango Pouch', rarity: 'common', stat: 'totalAssists', need: 300 },
       { id: 'founder_pennant', name: "Founder's Pennant", rarity: 'rare', stat: 'founder', need: 1 },
       { id: 'deny_shield', name: 'Deny Shield', rarity: 'rare', stat: 'denies', need: 150 },
       { id: 'hex_talisman', name: 'Hex Talisman', rarity: 'rare', stat: 'stackWins', need: 15 },
+      { id: 'mana_charm', name: 'Mana Charm', rarity: 'rare', stat: 'allpickWins', need: 10 },
+      { id: 'humility_urn', name: 'Urn of Humility', rarity: 'rare', stat: 'noKillWins', need: 3 },
+      { id: 'ward_satchel', name: 'Ward Satchel', rarity: 'rare', stat: 'obsPlaced', need: 50, parsed: true },
       { id: 'tank_bulwark', name: 'Tank Mode Bulwark', rarity: 'epic', stat: 'deathlessWins', need: 10 },
+      { id: 'glimmer_lantern', name: 'Glimmer Lantern', rarity: 'epic', stat: 'bestHealing', need: 10000, animated: true },
+      { id: 'bounty_purse', name: 'Bounty Purse', rarity: 'epic', stat: 'bountyRunes', need: 40, parsed: true, animated: true },
       { id: 'second_life_shield', name: 'Second Life Shield', rarity: 'legendary', stat: 'comebackWins', need: 5, animated: true },
+      { id: 'aegis_buckler', name: 'Aegis Buckler', rarity: 'legendary', stat: 'aegis', need: 3, animated: true },
     ] },
     { id: 'boots', name: 'Boots', items: [
       { id: 'none', name: 'Recruit Shoes', rarity: 'starter', free: true },
       { id: 'tp_sandals', name: 'TP Out Sandals', rarity: 'common', stat: 'daysInWeek', need: 5 },
       { id: 'rotation_boots', name: 'Rotation Boots', rarity: 'common', stat: 'assistGames15', need: 10 },
+      { id: 'morning_jog', name: 'Morning Jog Shoes', rarity: 'common', stat: 'morningGames', need: 10 },
       { id: 'juke_boots', name: 'Juke Path Boots', rarity: 'rare', stat: 'lowDeathWins', need: 10 },
+      { id: 'courier_slippers', name: 'Courier Slippers', rarity: 'rare', stat: 'bestDayGames', need: 6 },
+      { id: 'phase_steps', name: 'Phase Steps', rarity: 'rare', stat: 'turboWins', need: 20 },
+      { id: 'dewarder_boots', name: "Dewarder's Boots", rarity: 'rare', stat: 'wardsKilled', need: 20, parsed: true },
       { id: 'rat_treads', name: 'Rat Doto Treads', rarity: 'epic', stat: 'towerDamage', need: 75000 },
+      { id: 'deny_dancer', name: 'Deny Dancer Boots', rarity: 'epic', stat: 'bestDenies', need: 25 },
+      { id: 'water_waders', name: 'Water Rune Waders', rarity: 'epic', stat: 'waterRunes', need: 20, parsed: true },
       { id: 'backdoor_greaves', name: 'Backdoor Greaves', rarity: 'legendary', stat: 'towerDmg8Games', need: 3, animated: true },
+      { id: 'siege_treads', name: 'Siege Treads', rarity: 'legendary', stat: 'bestTowerDamage', need: 20000, animated: true },
     ] },
     { id: 'pet', name: 'Pet', items: [
       { id: 'none', name: 'No Pet', rarity: 'starter', free: true },
       { id: 'lucky_cat', name: 'Bounty Rune Cat', rarity: 'common', stat: 'activeDays', need: 7 },
       { id: 'lane_frog', name: 'Stack Frog', rarity: 'common', stat: 'stacks', need: 1 },
       { id: 'creep_buddy', name: 'Lane Creep Buddy', rarity: 'common', stat: 'games', need: 25 },
+      { id: 'lunch_lizard', name: 'Lunch Break Lizard', rarity: 'common', stat: 'lunchGames', need: 10 },
+      { id: 'tilt_kitten', name: 'Tilt Kitten', rarity: 'common', stat: 'lossStreak', need: 5 },
+      { id: 'sentry_owl', name: 'Sentry Owl', rarity: 'common', stat: 'senPlaced', need: 30, parsed: true },
       { id: 'slime_buddy', name: 'Haste Slime', rarity: 'rare', stat: 'games', need: 50 },
       { id: 'sentry_eye', name: 'Sentry Eye', rarity: 'rare', stat: 'kdaBonuses', need: 20 },
       { id: 'rune_sprite', name: 'Rune Sprite', rarity: 'rare', stat: 'activeDays', need: 30 },
       { id: 'night_foal', name: 'Night Vision Foal', rarity: 'rare', stat: 'nightGames', need: 15 },
+      { id: 'solo_sloth', name: 'Solo Queue Sloth', rarity: 'rare', stat: 'soloWins', need: 15 },
+      { id: 'bottle_crab', name: 'Bottle Crab', rarity: 'rare', stat: 'runes', need: 50, parsed: true },
       { id: 'boulder_pup', name: 'Neutral Camp Pup', rarity: 'epic', stat: 'leagueWins', need: 10, noLeague: { stat: 'stacks', need: 25 } },
       { id: 'little_ghost', name: 'Fog of War Ghost', rarity: 'epic', stat: 'nightGames', need: 25 },
       { id: 'one_trick_pony', name: 'One-Trick Pony', rarity: 'epic', stat: 'sameHeroGames', need: 25 },
+      { id: 'stack_parrot', name: 'Stack Parrot', rarity: 'epic', stat: 'fiveStackWins', need: 5, animated: true },
       { id: 'ember_drake', name: 'Power Rune Drake', rarity: 'legendary', stat: 'bestWeek', need: 160, animated: true },
       { id: 'drop_mimic', name: 'Neutral Drop Mimic', rarity: 'legendary', stat: 'games', need: 100, animated: true },
+      { id: 'pool_hydra', name: 'Hero Pool Hydra', rarity: 'legendary', stat: 'heroesWon', need: 30, animated: true },
     ] },
     { id: 'aura', name: 'Aura', items: [
       { id: 'none', name: 'No Aura', rarity: 'starter', free: true },
@@ -200,12 +238,50 @@
     founder: () => "Play a game in the season's first week (never comes back)",
     weekSecond: n => (n === 1 ? 'Finish 2nd on the weekly leaderboard' : `Finish 2nd on the weekly leaderboard ${n} times`),
     weekThird: n => (n === 1 ? 'Finish 3rd on the weekly leaderboard' : `Finish 3rd on the weekly leaderboard ${n} times`),
+    // expansion 2
+    totalKills: n => `Get ${n} kills this season`,
+    bestXpm: n => `Reach ${n} XPM in one game`,
+    sameHeroWins: n => `Win ${n} games on the same hero`,
+    bestDayWins: n => `Win ${n} games in one day`,
+    partyGames: n => `Play ${n} games in a party`,
+    totalHeroDamage: n => `Deal ${n >= 1e6 ? n / 1e6 + 'M' : k(n)} hero damage this season`,
+    fullWeekends: n => `Play on both Saturday and Sunday in ${n} weekends`,
+    duoWins: n => `Win ${n} duo games`,
+    totalGold: n => `Earn ${k(n)} gold this season`,
+    bestWeekWins: n => `Win ${n} games in one week`,
+    totalAssists: n => `Get ${n} assists this season`,
+    noKillWins: n => `Win ${n} games without getting a kill`,
+    bestHealing: n => `Heal ${k(n)} in one game`,
+    aegis: n => (n === 1 ? 'Snatch the Aegis' : `Snatch the Aegis ${n} times`),
+    morningGames: n => `Play ${n} games between 6am and noon`,
+    bestDayGames: n => `Play ${n} games in one day`,
+    bestDenies: n => `Deny ${n} creeps in one game`,
+    bestTowerDamage: n => `Deal ${k(n)} tower damage in one game`,
+    lunchGames: n => `Play ${n} games between 12pm and 2pm`,
+    lossStreak: n => `Lose ${n} games in a row (it happens)`,
+    soloWins: n => `Win ${n} solo games`,
+    fiveStackWins: n => `Win ${n} games as a full 5-stack`,
+    heroesWon: n => `Win with ${n} different heroes`,
+    // from parsed games (OpenDota replay parsing)
+    obsPlaced: n => `Place ${n} observer wards this season`,
+    senPlaced: n => `Place ${n} sentry wards this season`,
+    wardsKilled: n => `Destroy ${n} enemy wards this season`,
+    rampages: n => (n === 1 ? 'Get a Rampage' : `Get ${n} Rampages`),
+    ultraKills: n => `Get ${n} Ultra Kills (4 kills in a row)`,
+    bestDamageTaken: n => `Take ${k(n)} damage in one game`,
+    bestDamageTakenWin: n => `Take ${k(n)} damage in one game and still win`,
+    runes: n => `Pick up ${n} runes this season`,
+    bountyRunes: n => `Pick up ${n} Bounty runes this season`,
+    arcaneRunes: n => `Pick up ${n} Arcane runes this season`,
+    waterRunes: n => `Pick up ${n} Water runes this season`,
   };
   const k = n => (n >= 1000 && n % 1000 === 0 ? `${n / 1000}k` : n.toLocaleString('en-US'));
 
   // ---------- stats from the leaderboard data ----------
   // Stats as of `now`: only games played before then count, so past weeks can be replayed for "new gear" detection.
-  function computeStats(members, allScored, elo, cfg, now) {
+  // parsed: replay stats from data.json, { [matchId]: { t: when they were read, p: { [accountId]: {...} } } }.
+  // Only replay stats read before `now` count, so a past Fight Night never changes when a late parse arrives.
+  function computeStats(members, allScored, elo, cfg, now, parsed) {
     const S = root.LeagueScoring, tz = cfg.timezoneOffsetHours;
     const scored = {};
     members.forEach(m => { scored[m.id] = (allScored[m.id] || []).filter(e => e.start_time < now); });
@@ -221,7 +297,13 @@
         deny5Games: 0, totalHealing: 0, bestHeroDamage: 0, heroDmg30Games: 0, towerDamage: 0, towerDmg8Games: 0, bestAssists: 0,
         assistGames10: 0, assistGames15: 0, assistGames20: 0, games10Kills: 0, lowDeathWins: 0, deathlessWins: 0, weekendWins: 0,
         stackWins: 0, comebackWins: 0, fastWins: 0, longWins35: 0, longWins40: 0, longWin45: 0, sameHeroGames: 0, founder: 0,
-        weekSecond: 0, weekThird: 0 };
+        weekSecond: 0, weekThird: 0,
+        totalKills: 0, bestXpm: 0, sameHeroWins: 0, bestDayWins: 0, partyGames: 0, totalHeroDamage: 0, fullWeekends: 0, duoWins: 0,
+        totalGold: 0, bestWeekWins: 0, totalAssists: 0, noKillWins: 0, bestHealing: 0, morningGames: 0, bestDayGames: 0, bestDenies: 0,
+        bestTowerDamage: 0, lunchGames: 0, lossStreak: 0, soloWins: 0, fiveStackWins: 0, heroesWon: 0,
+        // from parsed replays
+        parsedGames: 0, rampages: 0, ultraKills: 0, bestDamageTaken: 0, bestDamageTakenWin: 0, arcaneRunes: 0, bountyRunes: 0, waterRunes: 0,
+        runes: 0, obsPlaced: 0, senPlaced: 0, wardsKilled: 0, aegis: 0 };
     });
     const until = Math.min(end, now);
     for (const m of members) {
@@ -231,6 +313,7 @@
       const addTo = (map, key, val) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(val); };
       const inc = (map, key) => map.set(key, (map.get(key) || 0) + 1);
       let run = 0, lossRun = 0;
+      const dayGames = new Map(), dayWins = new Map(), wkWins = new Map(), heroWins = new Map(), heroesWon = new Set();
       for (const e of scored[m.id] || []) {
         if (!e.counted || e.start_time < start || e.start_time >= until) continue;
         if (e.result === 'abandon') { run = 0; continue; }
@@ -268,10 +351,40 @@
           if (mins >= 35) s.longWins35++; if (mins >= 40) s.longWins40++; if (mins >= 45) s.longWin45++;
         }
         lossRun = won ? 0 : lossRun + 1;
+        s.lossStreak = Math.max(s.lossStreak, lossRun);
+        const day = S.localDay(e.start_time, tz), party = partyAt(e, now);
+        inc(dayGames, day);
+        s.totalKills += e.kills || 0; s.totalAssists += a; s.totalHeroDamage += e.hero_damage || 0;
+        s.totalGold += Math.round((e.gpm || 0) * mins);
+        s.bestXpm = Math.max(s.bestXpm, e.xpm || 0); s.bestHealing = Math.max(s.bestHealing, e.hero_healing || 0);
+        s.bestDenies = Math.max(s.bestDenies, e.denies || 0); s.bestTowerDamage = Math.max(s.bestTowerDamage, e.tower_damage || 0);
+        if (hour >= 6 && hour < 12) s.morningGames++;
+        if (hour >= 12 && hour < 14) s.lunchGames++;
+        if (party >= 2) s.partyGames++;
+        if (won) {
+          inc(dayWins, day); inc(wkWins, wk); inc(heroWins, e.hero_id); heroesWon.add(e.hero_id);
+          if (!e.kills) s.noKillWins++;
+          if (party === 1) s.soloWins++; if (party === 2) s.duoWins++; if (party === 5) s.fiveStackWins++;
+        }
+        const pr = parsed && parsed[e.match_id];
+        const x = pr && pr.t <= now && pr.p && pr.p[m.id];
+        if (x) {
+          s.parsedGames++;
+          s.rampages += x.ram || 0; s.ultraKills += x.ult || 0; s.aegis += x.aeg || 0;
+          s.bestDamageTaken = Math.max(s.bestDamageTaken, x.dt || 0); if (won) s.bestDamageTakenWin = Math.max(s.bestDamageTakenWin, x.dt || 0);
+          s.arcaneRunes += x.arc || 0; s.bountyRunes += x.bty || 0; s.waterRunes += x.wat || 0; s.runes += x.run || 0;
+          s.obsPlaced += x.obs || 0; s.senPlaced += x.sen || 0; s.wardsKilled += x.wk || 0;
+        }
         addTo(wkDays, wk, S.localDay(e.start_time, tz)); addTo(wkHeroes, wk, e.hero_id); inc(wkGames, wk); inc(heroGames, e.hero_id);
         if (wk === weeks[0]) s.founder = 1;
       }
-      s.heroesPlayed = heroes.size; s.activeDays = days.size;
+      s.heroesPlayed = heroes.size; s.activeDays = days.size; s.heroesWon = heroesWon.size;
+      for (const v of dayGames.values()) s.bestDayGames = Math.max(s.bestDayGames, v);
+      for (const v of dayWins.values()) s.bestDayWins = Math.max(s.bestDayWins, v);
+      for (const v of wkWins.values()) s.bestWeekWins = Math.max(s.bestWeekWins, v);
+      for (const v of heroWins.values()) s.sameHeroWins = Math.max(s.sameHeroWins, v);
+      // a full weekend = a game on a Saturday and on the Sunday after it (1970-01-01, day 0, was a Thursday, so Saturdays are day % 7 === 2)
+      for (const d of days) if (((d % 7) + 7) % 7 === 2 && days.has(d + 1)) s.fullWeekends++;
       for (const v of wkDays.values()) s.daysInWeek = Math.max(s.daysInWeek, v.size);
       for (const v of wkHeroes.values()) s.heroesInWeek = Math.max(s.heroesInWeek, v.size);
       for (const v of wkGames.values()) s.bestWeekGames = Math.max(s.bestWeekGames, v);
@@ -282,7 +395,7 @@
     for (const m of members) for (const e of scored[m.id] || []) {
       if (!e.counted || e.start_time < start || e.start_time >= until) continue;
       const s = stats[m.id];
-      s.seasonPoints += e.points;
+      s.seasonPoints += pointsAt(e, now);
       if (e.result === 'win' || e.result === 'loss') { s.games++; if (e.mode === 'allpick') s.allpickGames++; }
       if (e.result === 'win') { s.wins++; if (e.mode === 'turbo') s.turboWins++; else s.allpickWins++; }
       if (e.tags.includes('Stack')) s.stacks++;
@@ -304,6 +417,9 @@
   }
 
   const kda = e => ((e.kills || 0) + (e.assists || 0)) / Math.max(e.deaths || 0, 1);
+  // a game's party size and points as they stood at `now`: the parsed party size only counts once the hourly job had read it
+  const partyAt = (e, now) => (e.partyP && e.partyT <= now ? e.partyP : e.party0 || e.party || 1);
+  const pointsAt = (e, now) => (e.points0 != null && e.party !== e.party0 && !(e.partyT <= now) ? e.points0 : e.points);
   const isUnlocked = (item, st) => !!item.free || (!!st && (st[item.stat] || 0) >= item.need);
   const progress = (item, st) => (item.free ? 1 : Math.min(1, Math.max(0, (st ? st[item.stat] || 0 : 0) / item.need)));
   const requirement = item => (item.free ? 'Starter gear' : STAT_TEXT[item.stat](item.need));
@@ -931,6 +1047,262 @@
     },
   });
 
+
+  // ---------- expansion 2: 27 more items ----------
+  Object.assign(DRAW.head, {
+    kill_cap: g => {               // red cap with a white kill tally
+      const { R, P, D } = pen(g); const c = '#b63a2c', cD = '#8a2a1e';
+      R(11, 4, 10, 4, c); R(12, 3, 8, 1, c); R(19, 4, 2, 4, cD); R(10, 7, 1, 1, c);
+      R(11, 8, 13, 1, '#5a1a12'); P(23, 8, '#3a100a'); P(16, 2, cD);
+      D([[13, 5], [13, 6], [15, 5], [15, 6], [17, 5], [17, 6]], '#f4f0e8'); D([[12, 5], [18, 6]], '#f4f0e8');
+    },
+    xp_visor: g => {               // headset with a glowing scouter lens over one eye
+      const { R, P, D } = pen(g);
+      R(11, 6, 10, 1, '#3a3f47'); P(10, 7, '#3a3f47'); R(21, 7, 1, 4, '#3a3f47'); R(21, 10, 1, 2, '#262a30');
+      R(17, 10, 4, 3, '#6fe0f0'); R(17, 10, 4, 1, '#262a30'); P(20, 11, '#e6fbff'); P(17, 12, '#3a8a9a'); R(18, 13, 3, 1, '#262a30');
+      D([[19, 11], [18, 11]], '#a8f0ff'); P(22, 9, '#e8553e');
+    },
+    signature_helm: g => {         // full knight helm with a star crest and a plume
+      const { R, P, D } = pen(g); const m = '#7a6a9a', mL = '#a898c8', mD = '#54486e';
+      R(10, 4, 12, 6, m); P(10, 4, null); P(21, 4, null); R(11, 3, 10, 1, m); R(11, 4, 10, 1, mL);
+      R(10, 9, 1, 4, mD); R(21, 9, 1, 4, mD); R(10, 9, 12, 1, mD);
+      D([[15, 5], [16, 5], [14, 6], [15, 6], [16, 6], [17, 6], [15, 7], [16, 7], [14, 8], [17, 8]], C.gold); P(15, 6, C.goldL);
+      D([[17, 2], [18, 1], [19, 1], [20, 1], [21, 2], [22, 2], [23, 3], [23, 4]], '#c8323e'); D([[19, 2], [20, 2], [22, 3]], '#e8553e');
+    },
+    marathon_crown: (g, f) => {    // gold laurel wreath with little flapping wings
+      const { R, P, D } = pen(g); const lf = '#5fa04a', lfD = '#3e7a28';
+      R(11, 7, 10, 1, C.gold); R(11, 8, 10, 1, C.goldD);
+      D([[11, 6], [13, 6], [15, 6], [17, 6], [19, 6]], lf); D([[12, 6], [14, 6], [16, 5], [18, 6], [20, 6]], lfD); P(16, 6, C.gold); P(15, 5, C.goldL);
+      const up = f % 2 === 0;
+      D(up ? [[9, 6], [8, 5], [7, 4], [9, 5]] : [[9, 7], [8, 7], [7, 7], [9, 6]], '#f4f0e8');
+      D(up ? [[22, 6], [23, 5], [24, 4], [22, 5]] : [[22, 7], [23, 7], [24, 7], [22, 6]], '#f4f0e8');
+      const sp = [[12, 4], [20, 3], [16, 3], [11, 3]][f]; P(sp[0], sp[1], '#ffffff');
+    },
+  });
+  Object.assign(DRAW.body, {
+    team_jersey: g => {            // blue sports jersey, number 5
+      const { R, P, D } = pen(g); const j = '#2f5fb8', jD = '#204688', w = '#f4f0e8';
+      R(12, 16, 8, 7, j); R(19, 16, 1, 7, jD); R(10, 16, 2, 6, j); R(20, 16, 2, 6, jD);
+      R(10, 19, 2, 1, w); R(20, 19, 2, 1, w); R(14, 16, 4, 1, w); P(15, 17, w); P(16, 17, w);
+      D([[14, 18], [15, 18], [16, 18], [14, 19], [14, 20], [15, 20], [16, 20], [16, 21], [14, 22], [15, 22], [16, 22]], w);
+      R(12, 22, 8, 1, jD);
+    },
+    turbo_jumpsuit: g => {         // orange racing suit with black stripes and a bolt
+      const { R, P, D } = pen(g); const o = '#e8742a', oD = '#b8561c', bk = '#2a1a14';
+      R(12, 16, 8, 8, o); R(19, 16, 1, 8, oD); R(10, 16, 2, 6, o); R(20, 16, 2, 6, oD);
+      R(10, 18, 2, 1, bk); R(20, 18, 2, 1, bk); R(16, 16, 1, 8, '#d6cfc2');
+      D([[13, 17], [14, 18], [13, 19], [14, 20]], '#ffcf4a'); D([[18, 17], [18, 18]], bk); R(12, 21, 8, 1, bk); P(16, 21, C.steelL);
+    },
+    draft_armor: g => {            // teal plate with gold pauldrons and a draft scroll
+      const { R, P, D } = pen(g); const t = '#2f6b6a', tD = '#1f4a4a', tL = '#4a8f8c';
+      R(12, 16, 8, 6, t); R(19, 16, 1, 6, tD); R(10, 16, 2, 6, t); R(20, 16, 2, 6, tD); R(12, 16, 7, 1, tL);
+      R(9, 15, 4, 2, C.gold); R(19, 15, 4, 2, C.goldD); P(9, 14, C.goldL); P(22, 14, C.gold);
+      R(14, 17, 4, 4, '#ece6da'); R(14, 17, 4, 1, '#c4bcac'); R(14, 20, 4, 1, '#c4bcac'); D([[15, 18], [16, 18], [15, 19]], '#7a5232');
+      R(12, 21, 8, 1, C.goldD); P(16, 21, C.gold);
+    },
+    million_plate: (g, f) => {     // black-and-gold heavy plate with a pulsing red core
+      const { R, P, D } = pen(g); const b = '#24262c', bL = '#3a3e46';
+      R(12, 16, 8, 6, b); R(10, 16, 2, 6, b); R(20, 16, 2, 6, '#1a1c20'); R(12, 16, 8, 1, bL);
+      R(8, 14, 5, 3, C.gold); R(19, 14, 5, 3, C.goldD); D([[8, 13], [10, 12], [23, 13], [21, 12]], C.goldL); P(8, 16, C.goldD); P(23, 16, '#8a6a20');
+      D([[13, 17], [18, 17], [13, 20], [18, 20]], C.gold); R(12, 21, 8, 1, C.gold);
+      const core = ['#a3181a', '#e8302a', '#ff6a4a', '#e8302a'][f];
+      R(15, 18, 2, 2, core); P(14, 18, '#a3181a'); P(17, 19, '#a3181a'); P(15, 17, '#a3181a'); P(16, 20, '#a3181a');
+      if (f === 2) { P(15, 18, '#ffd9cc'); }
+    },
+  });
+  Object.assign(DRAW.cape, {
+    weekend_cape: g => {           // purple cape with a sunny diagonal stripe
+      const { R, P } = pen(g); const v = '#5b3a9e', vD = '#3f2870';
+      R(9, 17, 14, 12, v); R(9, 17, 1, 12, vD); R(22, 17, 1, 12, vD);
+      for (let i = 0; i < 12; i++) { P(10 + i, 18 + i, '#ffcf4a'); P(11 + i, 18 + i, '#e2b957'); }
+      for (let x = 9; x < 23; x += 2) P(x, 29, v); P(9, 16, C.gold); P(22, 16, C.gold);
+    },
+    duo_banner: g => {             // split red and blue banner with two stars and tassels
+      const { R, P, D } = pen(g);
+      R(9, 17, 7, 11, '#b63a2c'); R(16, 17, 7, 11, '#2f5fb8'); R(9, 17, 1, 11, '#8a2a1e'); R(22, 17, 1, 11, '#204688');
+      R(9, 17, 14, 1, C.gold); D([[12, 21], [11, 22], [12, 22], [13, 22], [12, 23]], '#f4f0e8'); D([[19, 21], [18, 22], [19, 22], [20, 22], [19, 23]], '#f4f0e8');
+      for (let x = 9; x < 23; x++) P(x, 28, x % 2 ? C.gold : null); D([[10, 29], [14, 29], [18, 29], [21, 29]], C.goldD);
+      P(9, 16, C.gold); P(22, 16, C.gold);
+    },
+    farmer_mantle: g => {          // wheat-brown mantle sewn with gold coins
+      const { R, P, D } = pen(g); const m = '#8a6a3a', mD = '#5e4626';
+      R(9, 17, 14, 11, m); R(9, 17, 1, 11, mD); R(22, 17, 1, 11, mD); R(9, 17, 14, 2, '#a8844a');
+      [[11, 21], [15, 20], [19, 22], [13, 25], [17, 25], [20, 26]].forEach(([x, y]) => { D([[x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]], C.gold); P(x, y, C.goldL); });
+      for (let x = 9; x < 23; x++) P(x, 28, x % 3 ? mD : C.gold); D([[10, 29], [13, 29], [16, 29], [19, 29], [22, 29]], C.gold);
+    },
+    perfect_week_cloak: (g, f) => { // deep blue royal cloak with seven twinkling stars (one per day)
+      const { R, P } = pen(g); const n = '#1c2a6a', nD = '#121c48';
+      R(9, 17, 14, 12, n); R(9, 17, 1, 12, nD); R(22, 17, 1, 12, nD); R(9, 17, 14, 1, C.gold); R(9, 28, 14, 1, C.gold);
+      for (let x = 10; x < 23; x += 2) P(x, 29, C.goldD);
+      [[10, 22], [12, 20], [14, 23], [16, 21], [18, 24], [20, 20], [21, 23]].forEach(([x, y], i) => P(x, y, (i + f) % 4 === 0 ? '#ffffff' : (i + f) % 2 ? C.goldL : '#a8c4ff'));
+      P(9, 16, C.gold); P(22, 16, C.gold); P(16, 26, '#e8553e');
+    },
+  });
+  Object.assign(DRAW.offhand, {
+    tango_pouch: g => {            // little leather pouch with leaves poking out
+      const { R, P, D } = pen(g); const l = '#8a5e36', lD = '#5e3e22';
+      R(6, 21, 5, 4, l); R(7, 25, 3, 1, l); R(10, 21, 1, 4, lD); R(6, 21, 5, 1, lD); P(8, 22, C.gold);
+      D([[7, 20], [7, 19], [6, 18], [9, 20], [9, 19], [10, 18], [8, 19]], '#5fa04a'); D([[6, 17], [10, 17], [8, 18]], '#8fd06a');
+    },
+    mana_charm: g => {             // blue crystal charm on a short chain
+      const { P, D } = pen(g);
+      D([[9, 19], [9, 20], [8, 21]], C.steel);
+      D([[8, 22], [7, 23], [8, 23], [9, 23], [6, 24], [7, 24], [8, 24], [9, 24], [10, 24], [7, 25], [8, 25], [9, 25], [8, 26]], '#3d6ec9');
+      D([[8, 23], [7, 24], [8, 24]], '#8fc0ff'); P(8, 24, '#e6f4ff'); D([[5, 23], [11, 25], [8, 28]], '#6fb7ff');
+    },
+    humility_urn: g => {           // small bronze urn with a teal glow
+      const { R, P, D } = pen(g); const b = '#a8743a', bD = '#7a5228', bL = '#d8a55e';
+      R(6, 21, 6, 5, b); R(7, 26, 4, 1, bD); R(7, 20, 4, 1, bD); R(7, 19, 4, 1, b); R(11, 21, 1, 5, bD); D([[7, 22], [7, 23]], bL);
+      R(6, 23, 6, 1, bD); D([[5, 21], [5, 22], [12, 21], [12, 22]], bD);
+      D([[8, 18], [9, 17], [10, 18], [9, 16]], '#6fe0d0'); P(9, 18, '#c8fff4');
+    },
+    glimmer_lantern: (g, f) => {   // hand lantern with a soft violet glow
+      const { R, P, D } = pen(g);
+      D([[8, 17], [9, 16], [10, 17]], C.iron); R(9, 17, 1, 2, C.iron);
+      R(7, 19, 5, 6, C.iron); R(8, 20, 3, 4, ['#b48aff', '#c8a8ff', '#e6d8ff', '#c8a8ff'][f]); P(9, 21, '#ffffff'); R(7, 25, 5, 1, C.ironD);
+      const sp = [[[5, 19], [13, 23]], [[5, 22], [13, 19]], [[6, 26], [12, 18]], [[13, 21], [5, 24]]][f];
+      sp.forEach(([x, y]) => P(x, y, '#e6d8ff'));
+    },
+    aegis_buckler: (g, f) => {     // round gold buckler with a white wing and a glowing rim
+      const { P, D } = pen(g);
+      disc(P, 8.5, 21, 3.8, '#e2b957', '#b98c2f');
+      D([[7, 20], [8, 19], [9, 19], [10, 20], [7, 21], [8, 21], [9, 20], [6, 22], [7, 22], [8, 22]], '#f4f0e8'); D([[6, 21], [10, 19]], '#ffffff');
+      P(9, 22, '#c23c2a'); P(10, 22, '#e8553e');
+      const g2 = [[5, 18], [12, 18], [12, 24], [5, 24]][f]; P(g2[0], g2[1], '#fff1b8'); P(8, 16 + (f % 2), '#ffffff');
+    },
+  });
+  Object.assign(DRAW.boots, {
+    morning_jog: (g, f, lo, feet) => boot(g, feet, { main: '#e8e4dc', sole: '#8e8981', toe: '#e8742a', shaft: 1, cuff: '#e8742a',
+      extra: (P, { x, y }) => P(x + 1, y, '#e8742a') }),
+    courier_slippers: (g, f, lo, feet) => boot(g, feet, { main: '#b63a2c', sole: '#6a1f14', toe: '#e8553e', shaft: 0,
+      extra: (P, { x, y }, i) => { P(i === 0 ? x : x + 3, y - 1, '#f4f0e8'); P(x + 1, y + 1, '#8a2a1e'); } }),
+    phase_steps: (g, f, lo, feet) => boot(g, feet, { main: '#2f9a92', sole: '#1c5e58', toe: '#9ff0e6', shaft: 2, cuff: '#9ff0e6',
+      extra: (P, { x, y }, i) => { const h = i === 0 ? x + 4 : x - 1; P(h, y, '#5fc8bc'); P(h + (i === 0 ? 1 : -1), y + 1, '#3a8a82'); } }),
+    deny_dancer: (g, f, lo, feet) => boot(g, feet, { main: '#5b3a9e', sole: '#2a1a3a', toe: '#c8a8ff', shaft: 2, cuff: '#e2b957',
+      extra: (P, { x, y, lx }) => { P(lx + 1, y - 1, '#ffcf4a'); P(x + 2, y, '#7a4bb3'); } }),
+    siege_treads: (g, f, lo, feet) => boot(g, feet, { main: '#3a3f47', sole: '#1c1f24', toe: '#d5dbe0', shaft: 3, cuff: '#c23c2a',
+      extra: (P, { x, y, lx }, i) => {
+        P(lx, y - 2, '#d5dbe0'); P(lx + 2, y - 2, '#d5dbe0'); P(x + 1, y + 1, '#596067'); P(x + 2, y + 1, '#596067');
+        const sp = [[0, 2], [1, 3], [2, 2], [3, 3]][(f + i * 2) % 4]; P(x + sp[0], y + sp[1] - 1 + 1, '#ff7a3d');
+      } }),
+  });
+  Object.assign(DRAW.pet, {
+    lunch_lizard: g => {           // green lizard with its lunch bowl
+      const { R, P, D } = pen(g); const l = '#5fa04a', lD = '#3e7a28', lL = '#8fd06a';
+      R(1, 25, 6, 3, l); R(1, 27, 6, 1, lD); R(0, 24, 3, 2, l); P(0, 24, lL); P(1, 24, C.dark);
+      D([[7, 26], [8, 26], [9, 25], [9, 24], [8, 23]], l); D([[2, 28], [5, 28]], lD); P(3, 25, lL); P(5, 25, lL);
+      R(6, 22, 4, 2, '#f4f0e8'); R(6, 24, 4, 1, '#c4bcac'); D([[7, 21], [8, 21]], '#f4f0e8'); P(8, 21, '#c23c2a'); P(7, 22, '#e2b957');
+    },
+    tilt_kitten: g => {            // grumpy grey kitten with an anger mark
+      const { R, P, D } = pen(g); const c = '#8d9196', cD = '#62666c';
+      R(2, 24, 6, 4, c); R(2, 28, 2, 1, cD); R(6, 28, 2, 1, cD); R(7, 24, 1, 4, cD);
+      R(1, 20, 6, 4, c); D([[1, 19], [6, 19]], c); D([[1, 20], [6, 20]], '#e88f7a');
+      D([[2, 22], [3, 21], [5, 21], [6, 22]], C.dark); P(4, 23, '#e88f7a'); D([[3, 23], [5, 23]], cD);
+      D([[8, 24], [9, 23], [9, 22], [10, 21]], c);
+      D([[7, 17], [9, 17], [8, 16], [8, 18]], '#e8553e');
+    },
+    solo_sloth: g => {             // sleepy brown sloth with headphones
+      const { R, P, D } = pen(g); const b = '#8a6a4a', bD = '#5e4626', f = '#d8c69a';
+      R(1, 22, 7, 7, b); R(2, 21, 5, 1, b); R(7, 23, 1, 6, bD); R(1, 28, 7, 1, bD);
+      R(2, 23, 5, 3, f); D([[2, 24], [3, 24]], bD); D([[5, 24], [6, 24]], bD); P(3, 24, C.dark); P(5, 24, C.dark); P(4, 25, bD);
+      R(1, 20, 7, 1, '#2a2d30'); R(0, 21, 1, 3, '#2a2d30'); R(8, 21, 1, 3, '#2a2d30'); P(0, 22, '#e8553e'); P(8, 22, '#e8553e');
+    },
+    stack_parrot: (g, f) => {      // bright parrot flapping its wings
+      const { R, P, D } = pen(g); const r = '#d6402c', y = '#ffcf4a', bl = '#3d6ec9';
+      R(2, 21, 4, 6, r); R(3, 20, 3, 1, r); P(2, 21, '#e8553e'); P(3, 21, '#ffffff'); P(3, 22, C.dark);
+      D([[1, 22], [0, 23], [1, 23]], '#f4f0e8'); P(0, 24, C.dark);
+      const up = f % 2 === 0;
+      if (up) D([[6, 21], [7, 20], [8, 19], [6, 22], [7, 21], [8, 20]], bl); else D([[6, 23], [7, 23], [8, 24], [6, 24], [7, 24], [8, 25]], bl);
+      R(5, 23, 1, 3, y); D([[4, 27], [5, 28], [3, 28], [4, 29]], bl); D([[3, 27], [5, 27]], y);
+      R(2, 28, 1, 1, '#3b2f2a'); R(4, 28, 1, 1, '#3b2f2a');
+    },
+    pool_hydra: (g, f) => {        // little three-headed teal serpent, heads bobbing
+      const { R, P, D } = pen(g); const t = '#2f9a92', tD = '#1c5e58', tL = '#6fe0d0';
+      R(1, 25, 9, 4, t); R(1, 28, 9, 1, tD); R(2, 24, 7, 1, t); D([[3, 26], [6, 26], [8, 27]], tL); D([[10, 27], [11, 28]], t);
+      const bob = [[0, 1, 0], [1, 0, 1], [0, 0, 1], [1, 1, 0]][f];
+      [[2, 19], [5, 16], [8, 19]].forEach(([nx, top], i) => {
+        const y0 = top + bob[i];
+        for (let y = y0 + 3; y < 25; y++) P(nx + ((y + i) % 3 === 0 ? 1 : 0), y, y % 2 ? t : tD);
+        R(nx - 1, y0, 3, 3, t); P(nx - 2, y0 + 1, t); P(nx - 2, y0 + 2, tD); P(nx + 1, y0 + 2, tD);
+        P(nx, y0, '#ffcf4a'); P(nx - 1, y0, tL); P(nx - 3, y0 + 2, '#e8553e');
+      });
+    },
+  });
+
+  // ---------- expansion 2b: items from parsed games ----------
+  Object.assign(DRAW.head, {
+    team_wipe_crown: (g, f) => {   // dark iron crown; its five red gems light up one by one
+      const { R, P, D } = pen(g);
+      R(11, 6, 10, 2, '#2a2d33'); R(11, 7, 10, 1, '#1c1e22'); R(11, 5, 10, 1, '#3a3e46');
+      D([[11, 4], [11, 3], [13, 4], [15, 4], [15, 3], [15, 2], [16, 2], [16, 3], [16, 4], [18, 4], [20, 4], [20, 3]], '#3a3e46');
+      [[12, 6], [14, 6], [16, 5], [18, 6], [20, 6]].forEach(([x, y], i) => P(x, y, i <= f + 1 ? (i === f + 1 ? '#ff6a4a' : '#e8302a') : '#5a0f0a'));
+      P(15, 1, f === 3 ? '#ffffff' : '#ffd9cc');
+    },
+  });
+  Object.assign(DRAW.body, {
+    punching_bag_plate: g => {     // dented, patched-up leather plate
+      const { R, P, D } = pen(g); const l = '#7a5232', lD = '#54381f';
+      R(12, 16, 8, 7, l); R(19, 16, 1, 7, lD); R(10, 16, 2, 6, l); R(20, 16, 2, 6, lD);
+      R(13, 17, 3, 3, '#9aa3ab'); R(13, 17, 3, 1, '#d5dbe0'); P(14, 18, '#6c747c');
+      D([[17, 18], [18, 19], [17, 20], [18, 21]], '#e8e4dc'); D([[16, 19], [19, 20]], '#c4bcac');
+      D([[12, 21], [13, 21], [14, 21], [15, 21], [16, 21], [17, 21], [18, 21], [19, 21]], '#3e2814'); P(11, 18, '#e8e4dc'); P(20, 17, '#e8553e');
+    },
+    unkillable_carapace: (g, f) => { // dark green beetle shell with gold edges and a breathing core
+      const { R, P, D } = pen(g); const c = '#1f3a24', cL = '#2f5a34', cD = '#142618';
+      R(12, 16, 8, 7, c); R(10, 16, 2, 6, c); R(20, 16, 2, 6, cD); R(15, 16, 2, 7, cD);
+      R(8, 14, 5, 3, cL); R(19, 14, 5, 3, c); D([[8, 14], [9, 13], [23, 14], [22, 13]], C.gold);
+      D([[12, 16], [13, 17], [19, 16], [18, 17]], C.gold); R(12, 22, 8, 1, C.goldD);
+      const core = ['#5fa04a', '#8fd06a', '#c8ffa8', '#8fd06a'][f]; D([[13, 19], [14, 20], [18, 19], [17, 20]], core);
+    },
+  });
+  Object.assign(DRAW.cape, {
+    arcane_mantle: g => {          // violet cape with an arcane sigil
+      const { R, P, D } = pen(g); const v = '#4a2a7a', vD = '#321c54';
+      R(9, 17, 14, 12, v); R(9, 17, 1, 12, vD); R(22, 17, 1, 12, vD);
+      D([[15, 20], [16, 20], [14, 21], [17, 21], [13, 22], [18, 22], [13, 23], [18, 23], [14, 24], [17, 24], [15, 25], [16, 25]], '#c8a8ff');
+      D([[15, 22], [16, 23], [16, 22], [15, 23]], '#e6d8ff'); for (let x = 9; x < 23; x += 2) P(x, 29, v); P(9, 16, '#c8a8ff'); P(22, 16, '#c8a8ff');
+    },
+    multikill_mantle: g => {       // crimson cape with four white slashes
+      const { R, P } = pen(g); const r = '#8a1f1a', rD = '#5e1410';
+      R(9, 17, 14, 12, r); R(9, 17, 1, 12, rD); R(22, 17, 1, 12, rD); R(9, 17, 14, 1, '#2a1a14');
+      [11, 14, 17, 20].forEach(x => { for (let k = 0; k < 6; k++) P(x + (k > 2 ? 1 : 0), 20 + k, k === 0 ? '#ffffff' : '#e8e4dc'); });
+      for (let x = 9; x < 23; x++) P(x, 29, x % 2 ? r : null); P(9, 16, C.iron); P(22, 16, C.iron);
+    },
+  });
+  Object.assign(DRAW.offhand, {
+    ward_satchel: g => {           // satchel with a yellow ward-eye poking out
+      const { R, P, D } = pen(g); const l = '#5e3e22', lL = '#8a5e36';
+      R(5, 21, 7, 5, lL); R(5, 21, 7, 1, l); R(11, 21, 1, 5, l); R(5, 25, 7, 1, l); P(8, 23, C.gold);
+      R(7, 16, 1, 5, C.wood); R(6, 14, 3, 3, '#ffcf4a'); P(7, 15, '#2a1a14'); P(6, 14, '#fff1b8');
+      R(9, 18, 1, 3, C.wood); R(9, 17, 2, 2, '#6fb7ff'); P(10, 17, '#e6f4ff');
+    },
+    bounty_purse: (g, f) => {      // fat gold purse with a coin popping out
+      const { R, P, D } = pen(g); const p = '#b98c2f', pL = '#e2b957';
+      R(6, 21, 6, 5, p); R(5, 22, 8, 3, p); R(7, 20, 4, 1, '#8a6a20'); D([[6, 21], [7, 22]], pL); P(9, 23, '#fff1b8');
+      R(8, 19, 2, 1, '#c23c2a');
+      const cy = 18 - [0, 1, 2, 1][f]; R(8, cy - 1, 2, 2, '#ffcf4a'); P(8, cy - 1, '#fff1b8');
+    },
+  });
+  Object.assign(DRAW.boots, {
+    dewarder_boots: (g, f, lo, feet) => boot(g, feet, { main: '#2a3a5a', sole: '#141c2e', toe: '#a8d4f0', shaft: 2, cuff: '#e2b957',
+      extra: (P, { x, y, lx }) => { P(lx + 1, y - 1, '#6fb7ff'); P(x + 2, y, '#3d4e78'); } }),
+    water_waders: (g, f, lo, feet) => boot(g, feet, { main: '#2f6fb8', sole: '#1c3f6a', toe: '#8fc0ff', shaft: 3, cuff: '#8fc0ff',
+      extra: (P, { x, y, lx }, i) => { P(lx + 1, y - 2, '#e6f4ff'); P(i === 0 ? x - 1 : x + 4, y + 1, '#6fb7ff'); } }),
+  });
+  Object.assign(DRAW.pet, {
+    sentry_owl: g => {             // round blue owl with big sentry eyes
+      const { R, P, D } = pen(g); const o = '#3d5a8a', oL = '#6f8fc0', oD = '#2a3e60';
+      R(2, 21, 6, 7, o); R(3, 20, 4, 1, o); D([[2, 20], [7, 20], [1, 19], [8, 19]], oD); R(7, 22, 1, 6, oD);
+      R(2, 22, 3, 3, '#e6f4ff'); R(5, 22, 3, 3, '#e6f4ff'); P(3, 23, '#2a6fd1'); P(6, 23, '#2a6fd1'); P(3, 22, '#ffffff');
+      P(4, 25, '#e2b957'); P(5, 25, '#e2b957'); R(3, 26, 4, 1, oL); D([[3, 28], [6, 28]], '#e2b957');
+    },
+    bottle_crab: g => {            // little red crab hauling a glowing rune bottle
+      const { R, P, D } = pen(g); const c = '#c8432d', cD = '#8a2a1e';
+      R(1, 26, 7, 3, c); R(2, 25, 5, 1, c); R(1, 28, 7, 1, cD); D([[2, 24], [5, 24]], '#f4f0e8'); D([[2, 23], [5, 23]], C.dark);
+      D([[0, 29], [2, 29], [5, 29], [7, 29]], cD); D([[0, 25], [0, 24], [8, 25], [8, 24], [9, 23]], c);
+      R(8, 19, 3, 5, '#a8d4f0'); R(9, 18, 1, 1, '#a8d4f0'); P(9, 17, '#8a5e36'); R(8, 21, 3, 3, '#6fe0f0'); P(9, 22, '#ffffff');
+    },
+  });
   Object.assign(DRAW.aura, {
     fountain_glow: (g, f) => {
       ring(g, ['#2a6f8a', '#5fc8e8', '#e6fbff'], f, false);
@@ -1142,7 +1514,7 @@
       else if (ps.wink) { R(eL, 11, 1, 2, C.dark); P(eR - 1, 12, C.dark); P(eR, 12, C.dark); }
       else { R(eL, 11, 1, 2, C.dark); R(eR, 11, 1, 2, C.dark); }
       if (facing) { P(20, 13, skinD); R(17, 14, 2, 1, skinD); R(10, 11, 1, 2, skin); P(10, 12, skinD); } else R(15, 14, 2, 1, skinD);   // facing: nose, mouth and the far ear
-      if (!['tower_helm', 'rampage_helm', 'night_owl_hood', 'unbroken_helm', 'last_pick_hood'].includes(lo.head)) {
+      if (!['tower_helm', 'rampage_helm', 'night_owl_hood', 'unbroken_helm', 'last_pick_hood', 'signature_helm'].includes(lo.head)) {
         const h = pen(L.hair);                         // behind the head: long hair, tails
         if (lo.hair === 'mohawk') { R(15, 2, 2, 6, hairC); P(16, 2, hairD); R(11, 7, 1, 2, hairD); R(20, 7, 1, 2, hairD); }
         else if (lo.hair === 'shaved') { R(12, 6, 8, 1, shade(skin, 0.86)); P(11, 7, shade(skin, 0.86)); P(20, 7, shade(skin, 0.86)); }

@@ -36,7 +36,7 @@
   const partyLabel = n => PARTY_LABEL[Math.max(1, Math.min(5, n)) - 1];
   // Fields requested from OpenDota's /players/{id}/matches (asking for any field means asking for all of them).
   const MATCH_FIELDS = ['match_id', 'player_slot', 'radiant_win', 'duration', 'game_mode', 'lobby_type', 'hero_id', 'start_time',
-    'kills', 'deaths', 'assists', 'leaver_status', 'party_size', 'last_hits', 'denies', 'gold_per_min', 'hero_damage', 'tower_damage', 'hero_healing'];
+    'kills', 'deaths', 'assists', 'leaver_status', 'party_size', 'last_hits', 'denies', 'gold_per_min', 'hero_damage', 'tower_damage', 'hero_healing', 'xp_per_min'];
   const matchesQuery = () => MATCH_FIELDS.map(f => `project=${f}`).join('&');
 
   const isRadiant = slot => slot < 128;
@@ -51,8 +51,11 @@
   // ---- Weekly Points from pubs ----
   // members: [{id, name}], raw: { [accountId]: [OpenDota /players/{id}/matches rows] }
   // Win points depend on party size (solo wins are worth the most); every loss earns the same.
-  // Party size = the bigger of OpenDota's party_size and the number of registered members on your team.
-  function scorePubs(members, raw, cfg) {
+  // Party size: once OpenDota has parsed the game, the real party size from the replay (parsed[matchId].p[accountId].ps, read by the
+  // hourly job). Before that, OpenDota's party_size if the match list has one. Either way, never less than the registered members
+  // on your team. A week's points lock at Monday noon: a parse read after that still counts for gear, not for that week's points.
+  const PARTY_LOCK_HOURS = 12;
+  function scorePubs(members, raw, cfg, parsed) {
     const s = cfg.scoring, tz = cfg.timezoneOffsetHours;
     const allowed = countedModes(cfg);
     const byMatch = new Map();
@@ -69,12 +72,18 @@
         const mode = GAME_MODES[m.game_mode];
         if (!mode || !allowed.includes(mode)) continue;
         const mates = (byMatch.get(m.match_id) || []).filter(x => x.id !== p.id && x.radiant === isRadiant(m.player_slot));
-        const party = Math.max(1, Math.min(5, Math.max(m.party_size || 1, mates.length + 1)));
+        const clamp = n => Math.max(1, Math.min(5, n));
+        const party0 = clamp(Math.max(m.party_size || 1, mates.length + 1));     // best guess before the parse
+        const pr = parsed && parsed[m.match_id], ps = pr && pr.p && pr.p[p.id] && pr.p[p.id].ps;
+        const partyP = ps ? clamp(Math.max(ps, mates.length + 1)) : null;
+        const lock = weekRange(weekStartDay(m.start_time, tz), tz).end + PARTY_LOCK_HOURS * 3600;
+        const party = partyP && pr.t <= lock ? partyP : party0;
         const e = {
-          match_id: m.match_id, start_time: m.start_time, mode, hero_id: m.hero_id, party,
+          match_id: m.match_id, start_time: m.start_time, mode, hero_id: m.hero_id, party, party0,
+          partyP, partyT: partyP ? pr.t : null, partyConfirmed: !!partyP, partyLocked: !!partyP && pr.t > lock,
           kills: m.kills || 0, deaths: m.deaths || 0, assists: m.assists || 0, duration: m.duration || 0,
           last_hits: m.last_hits || 0, denies: m.denies || 0, gpm: m.gold_per_min || 0, hero_damage: m.hero_damage || 0,
-          tower_damage: m.tower_damage || 0, hero_healing: m.hero_healing || 0,
+          tower_damage: m.tower_damage || 0, hero_healing: m.hero_healing || 0, xpm: m.xp_per_min || 0,
           points: 0, tags: [], counted: true, result: null,
         };
         if (mates.length) { e.tags.push('Stack'); e.stackWith = mates.map(x => x.id); }   // gear stat: played with members
@@ -90,6 +99,7 @@
         if (s.weeklyCap && (perWeek.get(wk) || 0) >= s.weeklyCap) { e.counted = false; e.tags.push('Over weekly cap'); entries.push(e); continue; }
         perDay.set(day, (perDay.get(day) || 0) + 1); perWeek.set(wk, (perWeek.get(wk) || 0) + 1);
         e.points = win ? s.partyWin[party] : s.loss;
+        e.points0 = win ? s.partyWin[party0] : s.loss;                                // points before the parse arrived
         if (kdaOf(e.kills, e.deaths, e.assists) >= s.kdaThreshold) e.tags.push('KDA');   // gear stat only, no points
         entries.push(e);
       }

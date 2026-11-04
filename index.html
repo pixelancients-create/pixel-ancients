@@ -305,6 +305,7 @@
   .tag.KDA { border-color: rgba(216, 178, 92, .55); color: var(--gold); }
   .tag.Abandon { border-color: rgba(214, 73, 58, .7); color: var(--dire); }
   .tag.party { color: var(--text); }
+  .tag.party .unsure { margin-left: 2px; opacity: .6; }
   .tag.party.p1 { border-color: rgba(216, 178, 92, .6); color: var(--gold); }
   .tag.party.p4, .tag.party.p5 { border-color: rgba(143, 200, 79, .45); color: var(--radiant); }
   .tag.q { margin-left: 6px; border-color: rgba(255,255,255,.18); }
@@ -464,6 +465,7 @@
   .gitem .rar { font: 700 10.5px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--rc); }
   .gitem h3 { margin: 4px 0 6px; font: 700 16px/1.2 var(--body); letter-spacing: 0; text-transform: none; }
   .gitem .how { font-size: 14px; line-height: 1.4; }
+  .rp { display: inline-block; margin-left: 6px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; font: 700 10px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); vertical-align: 1px; cursor: help; }
   .gitem .fight { grid-column: 1 / -1; font-size: 13px; color: var(--muted); line-height: 1.4; } .gitem .fight b { color: var(--gold); font-weight: 600; }
   .gitem .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
   .gitem .mine { color: var(--text); font-weight: 600; } .gitem .mine .tick { color: var(--radiant); }
@@ -731,7 +733,12 @@
   const MULTI = MODES.length > 1;
   const modesAnd = MODES.map(m => MODE_NAME[m]).join(' and '), modesOr = MODES.map(m => MODE_NAME[m]).join(' or ');
   const MIN_GAMES = CFG.scoring.minGames || 0;
-  const partyChip = (e, title = '') => `<span class="tag party p${e.party}"${title ? ` title="${title}"` : ''}>${S.partyLabel(e.party)}</span>`;
+  const partyChip = (e, title = '') => {
+    const sure = e.partyConfirmed && !e.partyLocked;
+    const t = (title ? title + '. ' : '') + (e.partyLocked ? 'OpenDota confirmed this game\'s party size after the week\'s points locked (Monday noon), so these points stay as they were'
+      : sure ? 'Party size confirmed by OpenDota' : 'Not confirmed yet: OpenDota hasn\'t parsed this game. Shown as at least the members on your team; it updates within a few hours');
+    return `<span class="tag party p${e.party}" title="${t}">${S.partyLabel(e.party)}${sure ? '' : '<span class="unsure">?</span>'}</span>`;
+  };
   const AV = CFG.avatars || {};
   const loginEnabled = !CFG.demo && !!(AV.supabaseUrl && AV.supabaseAnonKey);
   const selfLink = CFG.demo || loginEnabled;     // players link their own Dota account after logging in with Discord
@@ -787,7 +794,7 @@
     const days = fetchWindowDays();
     let oldest = Date.now();
     for (const p of state.members) {
-      const key = 'm2:' + p.id + ':' + days;   // m2: rows now carry last hits, damage etc.
+      const key = 'm3:' + p.id + ':' + days;   // m3: rows now carry XPM too
       const cached = store.get(key);
       if (!force && cached && Date.now() - cached.t < ttl) { state.raw[p.id] = cached.v; oldest = Math.min(oldest, cached.t); tick(); continue; }
       try {
@@ -820,6 +827,7 @@
       const res = await fetch('data.json', { cache: 'no-store' });
       if (!res.ok) return false;
       const d = await res.json();
+      state.parsed = d.parsed || {}; state.parsedLoaded = true;
       if (!d.generatedAt || Date.now() - d.generatedAt > 3 * 3600 * 1000) return false; // stale: fall back to live
       state.heroes = d.heroes || {}; if (d.heroImg) state.heroImg = d.heroImg;
       state.raw = d.players || {};
@@ -828,6 +836,11 @@
       state.updatedAt = d.generatedAt;
       return true;
     } catch { return false; }
+  }
+
+  // Replay stats (wards, runes, Aegis...) are only in data.json: the hourly job asks OpenDota to parse games and reads them.
+  async function loadParsed() {
+    try { const res = await fetch('data.json', { cache: 'no-store' }); if (res.ok) { const d = await res.json(); state.parsed = d.parsed || {}; } } catch {}
   }
 
   // Players who linked their own account live in Supabase; everyone else is in config.js.
@@ -846,7 +859,7 @@
     const days = fetchWindowDays();
     for (const p of state.members) {
       if (state.raw[p.id]) continue;
-      const key = 'm2:' + p.id + ':' + days, cached = store.get(key);
+      const key = 'm3:' + p.id + ':' + days, cached = store.get(key);
       if (cached && Date.now() - cached.t < CFG.cacheMinutes * 60 * 1000) { state.raw[p.id] = cached.v; continue; }
       try {
         const rows = await od(`/players/${p.id}/matches?date=${days}&significant=0&${S.matchesQuery()}`);
@@ -856,23 +869,23 @@
   }
 
   function recompute() {
-    state.scored = S.scorePubs(state.members, state.raw, CFG);
+    state.scored = S.scorePubs(state.members, state.raw, CFG, state.parsed);
     state.elo = S.computeElo(state.members, state.league, CFG);
-    state.stats = A.computeStats(state.members, state.scored, state.elo, CFG, state.now);
+    state.stats = A.computeStats(state.members, state.scored, state.elo, CFG, state.now, state.parsed);
   }
 
   async function load(force) {
-    state.loading = true; state.errors = []; state.raw = {}; state.league = [];
+    state.loading = true; state.errors = []; state.raw = {}; state.league = []; state.parsedLoaded = false;
     renderStatus(0);
     if (CFG.demo) {
       const d = window.LEAGUE_DEMO.generate(CFG);
-      state.members = d.members; state.heroes = d.heroes; state.raw = d.raw; state.league = FEAT.league ? d.league : [];
+      state.members = d.members; state.heroes = d.heroes; state.raw = d.raw; state.league = FEAT.league ? d.league : []; state.parsed = d.parsed || {};
       Object.entries(d.taunts || {}).forEach(([id, t]) => { const k = 'demo:' + id; state.avatars[k] = { ...(state.avatars[k] || {}), ...t }; });
       state.now = d.now; state.source = 'sample data'; state.updatedAt = d.now * 1000;
     } else {
       await loadRoster();
       state.now = Math.floor(Date.now() / 1000);
-      if (force || !(await loadDataFile())) await loadLive(force);
+      if (force || !(await loadDataFile())) { await loadLive(force); if (!state.parsedLoaded) await loadParsed(); }
       else await loadMissing();
     }
     recompute();
@@ -1171,7 +1184,7 @@
         </table>
         <ul>
           <li>Bigger parties win more often, so each win is worth a little less. A solo player and a five-stack can both top the week.</li>
-          <li>Your party size is the bigger of what Dota reports and the number of registered members on your team. If you regularly party with someone, they should register too.</li>
+          <li>Your party size comes from OpenDota once it has parsed the game (the site asks for the parse; it usually takes a few hours). Until then it's a best guess, at least the number of registered members on your team, and the tag shows a <b>?</b>, so a win can move from Solo +12 to 5-stack +8 when the parse arrives. A week's points lock at Monday noon (Malaysia time); a later parse still counts for gear.</li>
           <li>Only your first ${s.dailyCap} games each day${s.weeklyCap ? ` and ${s.weeklyCap} games each week` : ''} score.</li>
           ${MIN_GAMES ? `<li>Play at least ${MIN_GAMES} counted games in a week to finish in that week's top 3.</li>` : ''}
           <li>Level on points? Higher KDA for the week wins, then fewer deaths. Still level, you share the spot.</li>
@@ -1744,7 +1757,7 @@
           ${it.id === 'none' ? '<span class="slot-ic big empty"></span>' : iconTile(slot.id, it, draft, 'big')}
           <div class="rar">${r.name}</div>
           <div class="iname">${esc(it.name)}</div>
-          <div class="ireq">${open ? (it.free ? 'Starter item' : `<span class="tick" role="img" aria-label="Unlocked:">✓</span> ${esc(A.requirement(it))}`) : `${esc(A.requirement(it))} · ${bigNum(Math.min(v, it.need))}/${bigNum(it.need)}`}</div>
+          <div class="ireq">${open ? (it.free ? 'Starter item' : `<span class="tick" role="img" aria-label="Unlocked:">✓</span> ${esc(A.requirement(it))}`) : `${esc(A.requirement(it))} · ${bigNum(Math.min(v, it.need))}/${bigNum(it.need)}${it.parsed ? REPLAY_TAG : ''}`}</div>
           ${guildsOn && it.id !== 'none' ? `<div class="ibattle"><b>In battle:</b> ${esc([B.slotStatText(slot.id, it.rarity), B.itemBattleText(it.id)].filter(Boolean).join('. ') || 'Base stats')}</div>` : ''}
           ${open ? '' : `<div class="bar"><i style="width:${Math.round(A.progress(it, st) * 100)}%"></i></div>`}
         </button>`; }).join('')}</div>`;
@@ -1836,7 +1849,8 @@
     view.innerHTML = `
       <div class="hero compact"><div class="eyebrow">Catalogue</div><h1>Gear</h1>
         <p class="tagline">${earn.length} items to unlock across ${A.SLOTS.length} slots.</p>
-        <p class="sub">Every item unlocks from your real season stats in ${esc(modesOr)} games. Gear resets each season; your saved look carries over.</p></div>
+        <p class="sub">Every item unlocks from your real season stats in ${esc(modesOr)} games. Gear resets each season; your saved look carries over.</p>
+        <p class="sub">Items marked <span class="rp">Replay</span> use stats only a parsed replay has (wards, runes, Rampages, the Aegis). The site asks OpenDota to parse your games automatically, so these can take a few hours to count.</p></div>
       ${you}
       <div class="gear-filters">
         <div class="chips"><span class="lbl">Slot</span>${chip('slot', 'all', 'All')}${A.SLOTS.map(sl => chip('slot', sl.id, sl.name)).join('')}</div>
@@ -1851,6 +1865,7 @@
     $('#gearQ').oninput = e => { GF.q = e.target.value; gearList(); };
     if (me) $('#gearShow').onchange = e => { GF.show = e.target.value; gearList(); };
   }
+  const REPLAY_TAG = '<span class="rp" title="Counts games OpenDota has parsed. The site requests the parse for you; it can take a few hours.">Replay</span>';
   function gearList() {
     const box = $('#gearList'); if (!box) return;
     const me = gearMe(), st = me ? state.stats[me.id] : null, ms = (state.members || []).filter(m => state.stats[m.id]);
@@ -1860,7 +1875,7 @@
     const groups = A.SLOTS.filter(sl => GF.slot === 'all' || sl.id === GF.slot).map(sl => {
       const items = sl.items.filter(it => it.id !== 'none').filter(it => {
         if (GF.rarity !== 'all' && it.rarity !== GF.rarity) return false;
-        if (q && !`${it.name} ${it.free ? 'starter' : A.requirement(it)} ${guildsOn ? B.itemBattleText(it.id) || '' : ''}`.toLowerCase().includes(q)) return false;
+        if (q && !`${it.name} ${it.free ? 'starter' : A.requirement(it)} ${it.parsed ? 'replay parsed' : ''} ${guildsOn ? B.itemBattleText(it.id) || '' : ''}`.toLowerCase().includes(q)) return false;
         if (st && GF.show !== 'all') { const open = A.isUnlocked(it, st), p = A.progress(it, st); if (GF.show === 'have' && !open) return false; if (GF.show === 'need' && open) return false; if (GF.show === 'close' && (open || p < 0.75)) return false; }
         return true;
       });
@@ -1873,7 +1888,7 @@
         const fight = guildsOn ? [B.slotStatText(sl.id, it.rarity), B.itemBattleText(it.id)].filter(Boolean).join('. ') : '';
         const own = owners == null ? (st ? '' : 'Everyone has it') : ms.length ? `${owners} of ${ms.length} players have it` : '';
         return `<div class="gitem ${st && !open ? 'locked' : ''}" style="--rc:${r.color}">${iconTile(sl.id, it, base)}
-          <div><div class="rar">${r.name}</div><h3>${esc(it.name)}</h3><div class="how">${it.free ? 'Everyone starts with this.' : esc(A.requirement(it))}</div></div>
+          <div><div class="rar">${r.name}</div><h3>${esc(it.name)}</h3><div class="how">${it.free ? 'Everyone starts with this.' : esc(A.requirement(it))}${it.parsed ? REPLAY_TAG : ''}</div></div>
           ${fight ? `<div class="fight"><b>In battle:</b> ${esc(fight)}</div>` : ''}
           ${mine || own ? `<div class="foot">${mine || '<span></span>'}<span>${own}</span></div>` : ''}</div>`; }).join('')}</div></div>`;
     }).join('');
@@ -1884,7 +1899,7 @@
   function unlockList() {
     const base = { skin: 1, hair: 'short', hairColor: 1, tunic: 0, head: 'none', body: 'tunic', cape: 'none', weapon: 'training_sword', pet: 'none', aura: 'none' };
     return `<h2>Gear to unlock</h2><ul class="unlock-list">${A.SLOTS.flatMap(sl => sl.items.filter(i => !i.free).map(it =>
-      `<li>${iconTile(sl.id, it, base)}<span><b>${esc(it.name)}</b> <span class="rar" style="color:${rarityOf(it).color}">${rarityOf(it).name}</span><br><span class="r">${esc(A.requirement(it))}</span></span></li>`)).join('')}</ul>`;
+      `<li>${iconTile(sl.id, it, base)}<span><b>${esc(it.name)}</b> <span class="rar" style="color:${rarityOf(it).color}">${rarityOf(it).name}</span><br><span class="r">${esc(A.requirement(it))}</span>${it.parsed ? REPLAY_TAG : ''}</span></li>`)).join('')}</ul>`;
   }
 
   // Gear each player unlocked during a week: stats at the week's start vs its end (or now).
@@ -1893,8 +1908,8 @@
     if (!FEAT.avatars || !state.members.length) return [];
     const { start, end } = S.weekRange(week, TZ);
     if (start >= state.now) return [];
-    const before = A.computeStats(state.members, state.scored, state.elo, CFG, start);
-    const after = A.computeStats(state.members, state.scored, state.elo, CFG, Math.min(end, state.now + 1));
+    const before = A.computeStats(state.members, state.scored, state.elo, CFG, start, state.parsed);
+    const after = A.computeStats(state.members, state.scored, state.elo, CFG, Math.min(end, state.now + 1), state.parsed);
     const out = [];
     for (const m of state.members) for (const sl of A.SLOTS) for (const it of sl.items) {
       if (!it.free && !A.isUnlocked(it, before[m.id]) && A.isUnlocked(it, after[m.id])) out.push({ m, slot: sl.id, it });
@@ -2011,7 +2026,7 @@
   }
   function buildSnapshot(snap) {
     const at = snap.at;
-    const stats = A.computeStats(state.members, state.scored, state.elo, CFG, at);
+    const stats = A.computeStats(state.members, state.scored, state.elo, CFG, at, state.parsed);
     const lastWeek = S.weekStartDay(at, TZ) - 7;
     const runeOf = B.runesFor(S.weeklyTable(state.members, state.scored, lastWeek, CFG, { final: true }));
     const guilds = (snap.data.guilds || []).map(g => {
