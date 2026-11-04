@@ -734,6 +734,8 @@
   const modesAnd = MODES.map(m => MODE_NAME[m]).join(' and '), modesOr = MODES.map(m => MODE_NAME[m]).join(' or ');
   const MIN_GAMES = CFG.scoring.minGames || 0;
   const partyChip = (e, title = '') => {
+    const rf = CFG.season.replaysFrom ? S.parseLocalDate(CFG.season.replaysFrom, TZ) : 0;
+    if (!e.partyConfirmed && e.start_time < rf) return `<span class="tag party p${e.party}"${title ? ` title="${title}"` : ''}>${S.partyLabel(e.party)}</span>`;   // before replay parsing started: never confirmed
     const sure = e.partyConfirmed && !e.partyLocked;
     const t = (title ? title + '. ' : '') + (e.partyLocked ? 'OpenDota confirmed this game\'s party size after the week\'s points locked (Monday noon), so these points stay as they were'
       : sure ? 'Party size confirmed by OpenDota' : 'Not confirmed yet: OpenDota hasn\'t parsed this game. Shown as at least the members on your team; it updates within a few hours');
