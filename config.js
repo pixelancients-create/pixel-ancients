@@ -23,7 +23,8 @@ window.LEAGUE_CONFIG = {
   season: {
     name: 'Trial Season',
     start: '2026-11-02',            // a Monday
-    weeks: 2,                       // regular weeks; a finals week follows
+    weeks: 2,
+    replaysFrom: '2026-11-04',      // only parse replays of games from this day on; '' = the whole season// regular weeks; a finals week follows
   },
 
   scoring: {
