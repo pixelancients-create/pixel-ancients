@@ -23,13 +23,14 @@ const KEY = process.env.OPENDOTA_API_KEY;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let last = 0;
-async function od(p, tries = 4) {
+let calls = 0;
+async function od(p, tries = 4, method = 'GET') {
   const wait = Math.max(0, last + 1100 - Date.now());
   if (wait) await sleep(wait);
-  last = Date.now();
+  last = Date.now(); calls++;
   const url = API + p + (KEY ? (p.includes('?') ? '&' : '?') + 'api_key=' + KEY : '');
-  const res = await fetch(url);
-  if (res.status === 429 && tries > 1) { await sleep(10000); return od(p, tries - 1); }
+  const res = await fetch(url, { method });
+  if (res.status === 429 && tries > 1) { await sleep(10000); return od(p, tries - 1, method); }
   if (!res.ok) throw new Error(`${res.status} ${p}`);
   return res.json();
 }
@@ -38,6 +39,67 @@ const slimPub = m => Object.fromEntries(S.MATCH_FIELDS.map(f => [f, m[f]]));   /
 const slimLeague = m => ({ match_id: m.match_id, radiant_win: m.radiant_win, start_time: m.start_time, duration: m.duration,
   players: (m.players || []).map(p => ({ account_id: p.account_id, player_slot: p.player_slot, hero_id: p.hero_id,
     kills: p.kills, deaths: p.deaths, assists: p.assists, personaname: p.personaname })) });
+
+// ---------- replay stats ----------
+// Some gear needs stats only a parsed replay has (wards, runes, Rampages, the Aegis). For each counted season game the job reads
+// /matches/{id}; if OpenDota hasn't parsed it yet it asks for a parse (POST /request/{id}) and checks again on a later run.
+// Results are kept in data.json for good, so every game is read about twice and requested at most 3 times.
+const PARSE_CALLS_PER_RUN = 40;            // keeps the hourly job well inside OpenDota's free 2,000 calls a day
+const PARSE_TRIES = 3, RECHECK_AFTER = 40 * 60, GIVE_UP_AFTER = 12 * 86400;   // replays expire after a week or two
+const AEGIS = new Set(['CHAT_MESSAGE_AEGIS', 'CHAT_MESSAGE_AEGIS_STOLEN']);
+const slotIndex = ps => (ps < 128 ? ps : ps - 128 + 5);
+const sumKeys = (o, min) => Object.entries(o || {}).reduce((t, [k, v]) => t + (Number(k) >= min ? Number(v) || 0 : 0), 0);
+const sumAll = o => Object.values(o || {}).reduce((t, v) => t + (Number(v) || 0), 0);
+function replayStats(m, ids) {
+  const out = {};
+  for (const p of m.players || []) {
+    if (!ids.has(String(p.account_id))) continue;
+    const rn = p.runes || {};
+    // party size from the replay; else count teammates sharing this player's party id
+    const team = (m.players || []).filter(x => (x.player_slot < 128) === (p.player_slot < 128));
+    const ps = p.party_size > 0 ? p.party_size : p.party_id ? team.filter(x => x.party_id === p.party_id).length : 0;
+    const aeg = (m.objectives || []).filter(o => AEGIS.has(o.type) && (o.player_slot != null ? o.player_slot === p.player_slot : o.slot === slotIndex(p.player_slot))).length;
+    out[p.account_id] = Object.fromEntries(Object.entries({
+      obs: p.obs_placed || 0, sen: p.sen_placed || 0, wk: (p.observer_kills || 0) + (p.sentry_kills || 0),
+      ult: sumKeys(p.multi_kills, 4), ram: sumKeys(p.multi_kills, 5),            // a Rampage also counts as an Ultra Kill
+      dt: Math.round(sumAll(p.damage_taken)), run: sumAll(rn),
+      bty: Number(rn[5]) || 0, arc: Number(rn[6]) || 0, wat: Number(rn[7]) || 0, aeg, ps: Math.min(5, ps),
+    }).filter(([, v]) => v));                                                     // zeros are left out to keep data.json small
+  }
+  return out;
+}
+const isParsed = m => !!m && (m.version != null || (m.od_data && m.od_data.has_parsed));
+
+async function updateReplays(out, previous, roster, now) {
+  out.parsed = previous.parsed || {};
+  out.parseQueue = previous.parseQueue || {};
+  const ids = new Set(roster.map(p => String(p.id)));
+  // drop games from earlier seasons
+  Object.keys(out.parsed).forEach(id => { if (out.parsed[id].s < S.seasonRange(CFG).start - 14 * 86400) delete out.parsed[id]; });
+  const scored = S.scorePubs(roster, out.players, CFG);
+  const { start, end } = S.seasonRange(CFG);
+  const games = new Map();
+  for (const list of Object.values(scored)) for (const e of list) {
+    if (e.counted && e.start_time >= start && e.start_time < end && !(e.match_id in out.parsed)) games.set(String(e.match_id), e.start_time);
+  }
+  Object.keys(out.parseQueue).forEach(id => { if (!games.has(id)) delete out.parseQueue[id]; });
+  const budget = calls + PARSE_CALLS_PER_RUN;
+  let read = 0, asked = 0, waiting = 0;
+  // oldest games first, so their replays are fetched before they expire
+  for (const [id, at] of [...games].sort((a, b) => a[1] - b[1])) {
+    if (calls >= budget) { waiting++; continue; }
+    const q = out.parseQueue[id] || { n: 0, t: 0 };
+    if (q.n && now - q.t < RECHECK_AFTER) { waiting++; continue; }
+    try {
+      const m = await od(`/matches/${id}`); read++;
+      if (isParsed(m)) { out.parsed[id] = { t: now, s: at, p: replayStats(m, ids) }; delete out.parseQueue[id]; continue; }
+      if (q.n >= PARSE_TRIES || now - at > GIVE_UP_AFTER) { out.parsed[id] = { t: now, s: at, p: {}, none: 1 }; delete out.parseQueue[id]; continue; }
+      await od(`/request/${id}`, 1, 'POST'); asked++;
+      out.parseQueue[id] = { n: q.n + 1, t: now };
+    } catch (e) { out.warnings.push(`replay ${id}: ${e.message}`); }
+  }
+  console.log(`Replays: ${read} read, ${asked} parse requests, ${waiting} waiting, ${Object.keys(out.parsed).length} stored`);
+}
 
 async function linkedPlayers() {
   const av = CFG.avatars || {};
@@ -90,6 +152,9 @@ async function linkedPlayers() {
       else out.warnings.push(`league match ${id}: not on OpenDota yet, request a parse`);
     } catch (e) { out.warnings.push(`league match ${id}: ${e.message}`); }
   }
+
+  try { await updateReplays(out, previous, roster, now); }
+  catch (e) { out.parsed = previous.parsed || {}; out.parseQueue = previous.parseQueue || {}; out.warnings.push('replays: ' + e.message); }
 
   fs.writeFileSync(outFile, JSON.stringify(out));
   console.log(`Wrote data.json: ${roster.length} players (${roster.filter(p => p.linked).length} self-linked), ${out.leagueMatches.length} league matches, ${out.warnings.length} warnings`);
