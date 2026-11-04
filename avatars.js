@@ -91,7 +91,7 @@
       { id: 'multikill_mantle', name: 'Multi-Kill Mantle', rarity: 'epic', stat: 'ultraKills', need: 3, parsed: true },
       { id: 'sunfire_cape', name: 'Beyond Godlike Cape', rarity: 'legendary', stat: 'winStreak', need: 10, animated: true },
       { id: 'defender_mantle', name: 'Ancient Defender Mantle', rarity: 'legendary', stat: 'longWins40', need: 5, animated: true },
-      { id: 'perfect_week_cloak', name: 'Perfect Week Cloak', rarity: 'legendary', stat: 'bestWeekWins', need: 12, animated: true },
+      { id: 'perfect_week_cloak', name: 'Perfect Week Cloak', rarity: 'legendary', stat: 'bestWeekWins', need: 24, animated: true },
     ] },
     { id: 'weapon', name: 'Weapon', items: [
       { id: 'training_sword', name: 'Creep Sword', rarity: 'starter', free: true },
