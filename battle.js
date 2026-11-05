@@ -582,7 +582,7 @@
         const src = all.find(x => x.key === d.src);
         if (d.kind === 'hot') { heal(u, d.v, src); d.left--; continue; }
         const dealt = applyRaw(u, d.v, src, 'dot');
-        log({ k: 'dot', t: u.key, d: dealt, kind: d.kind, h: Math.max(0, u.hp) });
+        log({ k: 'dot', t: u.key, s: d.src, d: dealt, kind: d.kind, h: Math.max(0, u.hp) });   // s: who applied it (shown only by the finisher)
         d.left--;
       }
       u.dots = u.dots.filter(d => d.left > 0);

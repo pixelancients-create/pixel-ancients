@@ -732,6 +732,7 @@
 <script src="avatars.js"></script>
 <script src="battle.js"></script>
 <script src="battleview.js"></script>
+<script src="finisher.js"></script>
 <script src="vendor/obscenity.min.js"></script>
 <script src="tauntfilter.js"></script>
 <script src="demo.js"></script>
@@ -2039,6 +2040,7 @@
     crestCache.set(key, url);
     return url;
   }
+  const crestCanvas = raw => { const im = new Image(); im.src = crestURL(raw); return im; };
   const crestImg = (c, size = 32) => `<img class="crest-img" src="${crestURL(c)}" width="${size}" height="${size}" alt="">`;
 
   // ---- names: guild names and tags go through the same slur filter as taunts ----
@@ -2090,7 +2092,8 @@
         const p = memberByDiscord(m.discord_id);
         const saved = (snap.data.loadouts || {})[m.discord_id];
         const lo = p ? A.sanitize(saved || state.avatars[avatarKey(p)], p.id, stats[p.id]) : A.defaultLoadout(0, null);
-        return { name: p ? p.name : 'Unlinked player', lo, pos: m.position, playerId: p ? p.id : null };
+        const tx = cleanTaunt((saved || state.avatars[avatarKey(p)] || {}).taunt);
+        return { name: p ? p.name : 'Unlinked player', lo, pos: m.position, playerId: p ? p.id : null, taunt: p && FEAT.avatars && tx && !tauntBlocked(tx) ? tx : '' };
       });
       const runes = [...new Set(members.map(m => runeOf[m.playerId]).filter(Boolean))];
       return { id: g.id, name: guildName(g), tag: guildTag(g), crest: g.crest, members, runes, sittingOut: (g.members || []).length - members.length };
@@ -2438,13 +2441,18 @@
       ${rows.map(u => `<tr><td>${esc(u.name)}${u.key === r.mvp ? ' <span class="tag cap">MVP</span>' : ''}${u.pet ? ` <span class="petnote">+ ${esc(u.pet)}</span>` : ''}</td><td>${esc(names[u.team])}</td><td class="r num">${u.dealt}</td><td class="r num hide-sm">${u.healed}</td><td class="r num">${u.kills}</td></tr>`).join('')}
       </tbody></table>`;
     const tabs = [...view.querySelectorAll('.round-tabs [data-round]')];
+    const tauntByPid = {}; snap.guilds.forEach(g => (g.members || []).forEach(m => { if (m.playerId) tauntByPid[m.playerId] = m.taunt || ''; }));
     // play round i; when it ends, the next round starts by itself (same speed)
     const play = (i, speed) => {
       if (arenaCtl) arenaCtl.stop();
       tabs.forEach((t, k) => t.setAttribute('aria-pressed', String(k === i)));
       const x = rounds[i], last = i === rounds.length - 1, sc = after[i];
       const hp = x.reason === 'time' ? ' · on HP left' : '';
-      const opts = { fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}-round${i + 1}`, speed,
+      // finisher: every round can get one; the last round decides the match (2–0 or 2–1) and ends on the guild victory screen
+      const win = (last ? r.winner : x.winner) === 0 ? a : b, cc = cleanCrest(win.crest);
+      const finisher = { decider: last, names, tags: [guildTag(a), guildTag(b)], crest: crestCanvas(win.crest), crestColors: [CREST_COLORS[cc.b], CREST_COLORS[cc.f]],
+        score: last ? `${Math.max(...sc)}–${Math.min(...sc)}` : '', mvp: last ? r.mvpName : '', taunt: u => tauntByPid[u.playerId] || '' };
+      const opts = { finisher, fileName: `fight-${fid}-${guildTag(a)}-vs-${guildTag(b)}-round${i + 1}`, speed,
         endTitle: last ? 'VICTORY' : `ROUND ${i + 1}`,
         endSub: last ? `${wName} wins ${Math.max(...sc)}–${Math.min(...sc)}${hp}` : `${names[x.winner]} takes it${hp} · ${sc[0]}–${sc[1]}`,
         onEnd: last ? null : () => setTimeout(() => { if (arenaCtl === ctl && view.classList.contains('active')) play(i + 1, ctl.speed()); }, 900) };
