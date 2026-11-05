@@ -35,6 +35,7 @@ window.LEAGUE_CONFIG = {
     // Gentler on parties, if stacks feel punished after the trial:  { 1: 12, 2: 12, 3: 11, 4: 10, 5: 9 }
     loss: 2,                        // every counted loss, any party size
     abandon: -5,
+    allpickWeight: 2,               // an All Pick game counts as 2 games: double points, uses 2 of the daily/weekly cap, counts 2 toward minGames
     dailyCap: 12,                    // counted games per day
     weeklyCap: 48,                  // counted games per week (the first 24 count)
     minGames: 24,                   // counted games needed to place in a week's final top 3
