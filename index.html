@@ -997,7 +997,7 @@
     // the rune this podium spot earns its guild for the next weekend's Fight Nights
     const wkend = runeWeekend(state.week);
     const podRune = r => {
-      if (!guildsOn || !r.rank || r.rank > 3) return '';
+      if (!guildsOn || !r.rank || r.rank > 3 || !runeWeekOk(state.week)) return '';
       const rn = RUNE_BY_RANK[r.rank - 1], g = guildOfMember(state.members.find(m => m.id === r.id));
       const name = esc(runeName(rn)), fx = esc(runeEffect(rn).replace(/^Team /, ''));
       let line, sub;
@@ -2084,7 +2084,7 @@
     const at = snap.at;
     const stats = A.computeStats(state.members, state.scored, state.elo, CFG, at, state.parsed);
     const lastWeek = S.weekStartDay(at, TZ) - 7;
-    const runeOf = B.runesFor(S.weeklyTable(state.members, state.scored, lastWeek, CFG, { final: true }));
+    const runeOf = runeWeekOk(lastWeek) ? B.runesFor(S.weeklyTable(state.members, state.scored, lastWeek, CFG, { final: true })) : {};
     const guilds = (snap.data.guilds || []).map(g => {
       const members = (g.members || []).filter(m => eligible(m, at)).sort((a, b) => (a.position || 9) - (b.position || 9)).slice(0, 5).map(m => {
         const p = memberByDiscord(m.discord_id);
@@ -2122,6 +2122,8 @@
   }
   // ---- runes: last week's qualified top 3 give their guild a rune for the next weekend's Fight Nights ----
   const RUNE_BY_RANK = ['dd', 'haste', 'regen'];
+  // only weeks of the season earn runes (the week before the season, which the site also loads, doesn't)
+  const runeWeekOk = wk => S.seasonWeeks(CFG).includes(wk);
   const runeName = r => (B.RUNES[r] ? B.RUNES[r].name : r);
   const runeEffect = r => Object.entries((B.RUNES[r] || {}).fx || {}).map(([k, v]) => (k === 'atkPct' ? `Team +${v}% attack` : k === 'spd' ? `Team +${v} speed` : k === 'regen' ? `Team heals ${v} HP a turn` : '')).filter(Boolean).join(', ');
   const runeIcon = (r, size = 24) => `<img class="rune-ic" data-rune="${r}" src="${A.runeURL(r, 0)}" width="${size}" height="${size}" alt="">`;
@@ -2136,7 +2138,8 @@
   const guildOfMember = m => (m ? guildOfDiscord(avatarKey(m)) : null);
   // runes each guild holds for a Fight Night at `at`: { [guildId]: ['dd', ...] }
   function runesForFight(at) {
-    const runeOf = B.runesFor(S.weeklyTable(state.members, state.scored, S.weekStartDay(at, TZ) - 7, CFG, { final: true }));
+    const wk = S.weekStartDay(at, TZ) - 7;
+    const runeOf = runeWeekOk(wk) ? B.runesFor(S.weeklyTable(state.members, state.scored, wk, CFG, { final: true })) : {};
     const out = {};
     (state.guilds || []).forEach(g => {
       const rs = [...new Set((g.members || []).filter(m => eligible(m, at)).map(m => { const p = memberByDiscord(m.discord_id); return p ? runeOf[p.id] : null; }).filter(Boolean))];
@@ -2148,6 +2151,7 @@
   function runeEarners(g, at) {
     const wk = S.weekStartDay(at, TZ) - 7, rows = S.weeklyTable(state.members, state.scored, wk, CFG, { final: true });
     const out = [];
+    if (!runeWeekOk(wk)) return out;
     (g.members || []).filter(m => eligible(m, at)).forEach(m => { const p = memberByDiscord(m.discord_id), row = p && rows.find(x => x.id === p.id);
       if (row && row.rank != null && row.rank <= 3 && row.played > 0) out.push({ r: RUNE_BY_RANK[row.rank - 1], name: row.name, rank: row.rank }); });
     return out.sort((a, b) => a.rank - b.rank);
