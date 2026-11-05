@@ -1355,7 +1355,7 @@
           <ul>${checks.map(c => `<li class="${c[0] ? 'ok' : 'bad'}">${c[0] ? '✓' : '✗'} ${esc(c[1])}</li>`).join('')}</ul>
           ${ok ? `<label class="dn">Your name on the leaderboards<input id="regName" maxlength="24" value="${esc(R.name != null ? R.name : Array.from(L.name).slice(0, 24).join(''))}"></label>
           <div class="acts"><button class="btn-red" data-reg="link">Yes, this is me. Link it</button><button class="btn" data-reg="reset">Not me</button></div>
-          <p class="reg-hint" style="margin-top:12px">You can link one Dota account. Picked the wrong one? An admin can unlink it.</p>`
+          <p class="reg-hint" style="margin-top:12px">${CFG.season.countFromJoin ? 'Your games count from today (from 12am), so play your first counted game any time from now. ' : ''}You can link one Dota account. Picked the wrong one? An admin can unlink it.</p>`
           : `<p class="bad">Fix the ✗ above, then search again.</p>`}
           <div class="link-msg ${R.msgOk ? 'ok' : 'bad'}" id="regMsg" role="status">${esc(R.msg || '')}</div>
         </div>`;

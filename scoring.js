@@ -55,6 +55,18 @@
   // hourly job). Before that, OpenDota's party_size if the match list has one. Either way, never less than the registered members
   // on your team. A week's points lock at Monday noon: a parse read after that still counts for gear, not for that week's points.
   const PARTY_LOCK_HOURS = 12;
+  // When a player's games start counting: players who registered themselves on or after season.countFromJoin count from
+  // 12am (local) on their registration day; players listed in config.js can have their own `joined: 'YYYY-MM-DD'`.
+  function countsFrom(p, cfg) {
+    const tz = cfg.timezoneOffsetHours;
+    if (p.joined) return parseLocalDate(p.joined, tz);
+    const since = cfg.season && cfg.season.countFromJoin;
+    if (!since || !p.selfLinked || !p.linkedAt) return 0;
+    const at = Date.parse(p.linkedAt) / 1000;
+    if (!isFinite(at)) return 0;
+    const day = dayToTs(localDay(at, tz), tz);
+    return day >= parseLocalDate(since, tz) ? day : 0;
+  }
   function scorePubs(members, raw, cfg, parsed) {
     const s = cfg.scoring, tz = cfg.timezoneOffsetHours;
     const allowed = countedModes(cfg);
@@ -67,7 +79,7 @@
     for (const p of members) {
       const list = (raw[p.id] || []).slice().sort((a, b) => a.start_time - b.start_time);
       const perDay = new Map(), perWeek = new Map();
-      const entries = [];
+      const entries = [], from = countsFrom(p, cfg);
       for (const m of list) {
         const mode = GAME_MODES[m.game_mode];
         if (!mode || !allowed.includes(mode)) continue;
@@ -88,6 +100,7 @@
         };
         if (mates.length) { e.tags.push('Stack'); e.stackWith = mates.map(x => x.id); }   // gear stat: played with members
         const win = m.radiant_win == null ? null : isRadiant(m.player_slot) === !!m.radiant_win;
+        if (m.start_time < from) { e.counted = false; e.tags.push('Before joining'); entries.push(e); continue; }
         if ((m.leaver_status || 0) >= 2) {
           e.points = s.abandon; e.result = 'abandon'; e.tags.push('Abandon'); entries.push(e); continue;
         }
@@ -220,13 +233,13 @@
       const cfg = out.find(p => p.id === id);
       if (cfg) { if (!cfg.discordId) { cfg.discordId = did; cfg.linked = true; cfg.linkedAt = r.linked_at; } continue; }
       if (out.some(p => String(p.discordId || '') === did)) continue;
-      out.push({ id, name: r.name, discord: '', discordId: did, linked: true, linkedAt: r.linked_at });
+      out.push({ id, name: r.name, discord: '', discordId: did, linked: true, linkedAt: r.linked_at, selfLinked: true });
     }
     return out;
   }
 
   return {
     GAME_MODES, MATCH_FIELDS, matchesQuery, countedModes, localDay, weekStartDay, weekRange, dayToTs, parseLocalDate, seasonWeeks, seasonRange,
-    scorePubs, weeklyTable, seasonTable, computeElo, kdaOf, isRadiant, partyLabel, PARTY_LABEL, mergeRoster,
+    scorePubs, countsFrom, weeklyTable, seasonTable, computeElo, kdaOf, isRadiant, partyLabel, PARTY_LABEL, mergeRoster,
   };
 });
