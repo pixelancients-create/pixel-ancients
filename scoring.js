@@ -55,6 +55,9 @@
   // hourly job). Before that, OpenDota's party_size if the match list has one. Either way, never less than the registered members
   // on your team. A week's points lock at Monday noon: a parse read after that still counts for gear, not for that week's points.
   const PARTY_LOCK_HOURS = 12;
+  // An All Pick game counts as `allpickWeight` games (default 1): its points are multiplied, it uses that many of the
+  // daily/weekly cap and counts that many toward minGames. Gear still counts real games.
+  const weightOf = (mode, s) => (mode === 'allpick' ? Math.max(1, Number(s.allpickWeight) || 1) : 1);
   // When a player's games start counting: players who registered themselves on or after season.countFromJoin count from
   // 12am (local) on their registration day; players listed in config.js can have their own `joined: 'YYYY-MM-DD'`.
   function countsFrom(p, cfg) {
@@ -107,12 +110,13 @@
         if (e.duration < s.minDurationSeconds[mode]) { e.counted = false; e.tags.push('Remake'); entries.push(e); continue; }
         if (win === null) { e.counted = false; e.tags.push('No result'); entries.push(e); continue; }
         e.result = win ? 'win' : 'loss';
-        const day = localDay(m.start_time, tz), wk = weekStartDay(m.start_time, tz);
-        if ((perDay.get(day) || 0) >= s.dailyCap) { e.counted = false; e.tags.push('Over daily cap'); entries.push(e); continue; }
-        if (s.weeklyCap && (perWeek.get(wk) || 0) >= s.weeklyCap) { e.counted = false; e.tags.push('Over weekly cap'); entries.push(e); continue; }
-        perDay.set(day, (perDay.get(day) || 0) + 1); perWeek.set(wk, (perWeek.get(wk) || 0) + 1);
-        e.points = win ? s.partyWin[party] : s.loss;
-        e.points0 = win ? s.partyWin[party0] : s.loss;                                // points before the parse arrived
+        const day = localDay(m.start_time, tz), wk = weekStartDay(m.start_time, tz), w = weightOf(mode, s);
+        e.weight = w;
+        if ((perDay.get(day) || 0) + w > s.dailyCap) { e.counted = false; e.tags.push('Over daily cap'); entries.push(e); continue; }
+        if (s.weeklyCap && (perWeek.get(wk) || 0) + w > s.weeklyCap) { e.counted = false; e.tags.push('Over weekly cap'); entries.push(e); continue; }
+        perDay.set(day, (perDay.get(day) || 0) + w); perWeek.set(wk, (perWeek.get(wk) || 0) + w);
+        e.points = (win ? s.partyWin[party] : s.loss) * w;
+        e.points0 = (win ? s.partyWin[party0] : s.loss) * w;                          // points before the parse arrived
         if (kdaOf(e.kills, e.deaths, e.assists) >= s.kdaThreshold) e.tags.push('KDA');   // gear stat only, no points
         entries.push(e);
       }
@@ -144,22 +148,22 @@
     const rows = members.map(p => {
       const es = (scored[p.id] || []).filter(e => e.start_time >= start && e.start_time < end);
       const r = { id: p.id, name: p.name, points: 0, wins: 0, losses: 0, abandons: 0, turbo: 0, allpick: 0, stacks: 0, kdaBonuses: 0,
-        kills: 0, deaths: 0, assists: 0, party: [0, 0, 0, 0, 0] };
+        kills: 0, deaths: 0, assists: 0, party: [0, 0, 0, 0, 0], slots: 0 };
       for (const e of es) {
         if (!e.counted) continue;
         r.points += e.points;
         if (e.result === 'win') r.wins++;
         else if (e.result === 'loss') r.losses++;
         else if (e.result === 'abandon') r.abandons++;
-        if (e.result !== 'abandon') { r[e.mode]++; r.kills += e.kills; r.deaths += e.deaths; r.assists += e.assists; r.party[e.party - 1]++; }
+        if (e.result !== 'abandon') { r.slots += e.weight || 1; r[e.mode]++; r.kills += e.kills; r.deaths += e.deaths; r.assists += e.assists; r.party[e.party - 1]++; }
         if (e.tags.includes('Stack')) r.stacks++;
         if (e.tags.includes('KDA')) r.kdaBonuses++;
       }
       r.games = r.wins + r.losses + r.abandons;
       r.played = r.wins + r.losses;
       r.kda = kdaOf(r.kills, r.deaths, r.assists);
-      r.qualified = r.played >= min;
-      r.needs = Math.max(0, min - r.played);
+      r.qualified = r.slots >= min;                      // an All Pick game counts as allpickWeight games here
+      r.needs = Math.max(0, min - r.slots);
       r.entries = es.slice().sort((a, b) => b.start_time - a.start_time);
       return r;
     });
@@ -240,6 +244,6 @@
 
   return {
     GAME_MODES, MATCH_FIELDS, matchesQuery, countedModes, localDay, weekStartDay, weekRange, dayToTs, parseLocalDate, seasonWeeks, seasonRange,
-    scorePubs, countsFrom, weeklyTable, seasonTable, computeElo, kdaOf, isRadiant, partyLabel, PARTY_LABEL, mergeRoster,
+    scorePubs, countsFrom, weightOf, weeklyTable, seasonTable, computeElo, kdaOf, isRadiant, partyLabel, PARTY_LABEL, mergeRoster,
   };
 });

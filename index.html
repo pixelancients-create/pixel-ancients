@@ -306,6 +306,7 @@
   .tag.Abandon { border-color: rgba(214, 73, 58, .7); color: var(--dire); }
   .tag.party { color: var(--text); }
   .tag.party .unsure { margin-left: 2px; opacity: .6; }
+  .tag.x2 { color: var(--gold); border-color: rgba(216, 178, 92, .5); margin-left: 4px; }
   .tag.party.p1 { border-color: rgba(216, 178, 92, .6); color: var(--gold); }
   .tag.party.p4, .tag.party.p5 { border-color: rgba(143, 200, 79, .45); color: var(--radiant); }
   .tag.q { margin-left: 6px; border-color: rgba(255,255,255,.18); }
@@ -733,6 +734,8 @@
   const MULTI = MODES.length > 1;
   const modesAnd = MODES.map(m => MODE_NAME[m]).join(' and '), modesOr = MODES.map(m => MODE_NAME[m]).join(' or ');
   const MIN_GAMES = CFG.scoring.minGames || 0;
+  const APW = S.weightOf('allpick', CFG.scoring);                                   // an All Pick game counts as this many games
+  const ptCells = v => (APW > 1 ? MODES.map(m => `<td class="r num">${signed(v * S.weightOf(m, CFG.scoring))}</td>`).join('') : `<td class="r num">${signed(v)}</td>`);
   const partyChip = (e, title = '') => {
     const rf = CFG.season.replaysFrom ? S.parseLocalDate(CFG.season.replaysFrom, TZ) : 0;
     if (!e.partyConfirmed && e.start_time < rf) return `<span class="tag party p${e.party}"${title ? ` title="${title}"` : ''}>${S.partyLabel(e.party)}</span>`;   // before replay parsing started: never confirmed
@@ -989,7 +992,7 @@
         <td class="r num"><span class="w">${r.wins}</span>–<span class="l">${r.losses}</span>${r.abandons ? ` <span class="tag Abandon">${r.abandons} ab</span>` : ''}</td>
         ${MULTI ? MODES.map(m => `<td class="r num hide-sm">${r[m]}</td>`).join('') : ''}
         <td class="r num hide-sm">${r.played ? r.kda.toFixed(1) : '–'}</td>
-        <td class="r num hide-sm">${r.played}${CFG.scoring.weeklyCap ? `<span class="of">/${CFG.scoring.weeklyCap}</span>` : ''}</td>
+        <td class="r num hide-sm">${r.slots}${CFG.scoring.weeklyCap ? `<span class="of">/${CFG.scoring.weeklyCap}</span>` : ''}</td>
       </tr>`).join('');
 
     $('#view-weekly').innerHTML = `
@@ -1035,7 +1038,7 @@
     const items = row.entries.map((e, i) => `
       <tr class="${e.counted ? '' : 'skip'}"${i >= SHOW ? ' data-more hidden' : ''}>
         <td>${fmtDateTime(e.start_time)}</td>
-        <td>${modeLabel(e.mode)}</td>
+        <td>${modeLabel(e.mode)}${(e.weight || 1) > 1 ? ` <span class="tag x2" title="An All Pick game counts as ${e.weight} games: ${e.weight}x points, and it uses ${e.weight} of the daily and weekly cap">×${e.weight}</span>` : ''}</td>
         <td>${heroChip(e.hero_id)}${esc(heroName(e.hero_id))}</td>
         <td class="${e.result === 'win' ? 'w' : e.result ? 'l' : ''}">${e.result === 'abandon' ? 'Abandon' : e.result === 'win' ? 'Win' : e.result === 'loss' ? 'Loss' : '–'}</td>
         <td class="num hide-sm">${e.kills}/${e.deaths}/${e.assists}</td>
@@ -1177,17 +1180,18 @@
         <h2>Weekly Points</h2>
         <p>Every ${modesAnd} game you play counts automatically.${MULTI ? '' : ' Other modes don\'t score.'} Weeks run Monday 00:00 to Sunday 23:59 (UTC${TZ >= 0 ? '+' : ''}${TZ}).</p>
         <table class="table">
-          <thead><tr><th>Event</th><th class="r">Points</th></tr></thead>
+          <thead><tr><th>Event</th>${APW > 1 ? MODES.map(m => `<th class="r">${MODE_NAME[m]}</th>`).join('') : '<th class="r">Points</th>'}</tr></thead>
           <tbody>
-            ${[1, 2, 3, 4, 5].map(n => `<tr><td>${S.partyLabel(n)} win</td><td class="r num">${signed(s.partyWin[n])}</td></tr>`).join('')}
-            <tr><td>Loss (any party size)</td><td class="r num">${signed(s.loss)}</td></tr>
-            <tr><td>Abandon</td><td class="r num">${signed(s.abandon)}</td></tr>
+            ${[1, 2, 3, 4, 5].map(n => `<tr><td>${S.partyLabel(n)} win</td>${ptCells(s.partyWin[n])}</tr>`).join('')}
+            <tr><td>Loss (any party size)</td>${ptCells(s.loss)}</tr>
+            <tr><td>Abandon</td>${APW > 1 ? MODES.map(() => `<td class="r num">${signed(s.abandon)}</td>`).join('') : `<td class="r num">${signed(s.abandon)}</td>`}</tr>
           </tbody>
         </table>
         <ul>
           <li>Bigger parties win more often, so each win is worth a little less. A solo player and a five-stack can both top the week.</li>
           <li>Your party size comes from OpenDota once it has parsed the game (the site asks for the parse; it usually takes a few hours). Until then it's a best guess, at least the number of registered members on your team, and the tag shows a <b>?</b>, so a win can move from Solo +12 to 5-stack +8 when the parse arrives. A week's points lock at Monday noon (Malaysia time); a later parse still counts for gear.</li>
-          <li>Only your first ${s.dailyCap} games each day${s.weeklyCap ? ` and ${s.weeklyCap} games each week` : ''} score.</li>
+          ${APW > 1 && MODES.includes('allpick') ? `<li><b>An All Pick game counts as ${APW} games.</b> It earns ${APW}× the points, uses ${APW} of the daily and weekly cap, and counts ${APW} toward the games needed for the top 3. All Pick games take about 1.5× as long as Turbo, and win less often, so this keeps the two modes close. Gear still counts real games.</li>` : ''}
+          <li>Only your first ${s.dailyCap} games each day${s.weeklyCap ? ` and ${s.weeklyCap} games each week` : ''} score${APW > 1 && MODES.includes('allpick') ? ` (All Pick games count as ${APW})` : ''}.</li>
           ${MIN_GAMES ? `<li>Play at least ${MIN_GAMES} counted games in a week to finish in that week's top 3.</li>` : ''}
           <li>Level on points? Higher KDA for the week wins, then fewer deaths. Still level, you share the spot.</li>
           <li>${MODES.map(m => `${MODE_NAME[m]} games under ${s.minDurationSeconds[m] / 60} minutes`).join(' and ')} are treated as remakes and don't count.</li>
@@ -2592,7 +2596,7 @@
       <div class="score-chips">
         <span><b>${signed(sc.partyWin[1])}</b>Solo win</span><span><b>${signed(sc.partyWin[2])}</b>Duo win</span><span><b>${signed(sc.partyWin[5])}</b>5-stack win</span>
         <span><b>${signed(sc.loss)}</b>Any loss</span><span><b>${sc.weeklyCap}</b>Games a week max</span>
-        <span><b>${signed(sc.abandon)}</b>Abandon</span>
+        <span><b>${signed(sc.abandon)}</b>Abandon</span>${APW > 1 && MODES.includes('allpick') ? `<span><b>×${APW}</b>All Pick game</span>` : ''}
       </div>
 
       <div class="section-head"><div><div class="eyebrow">Questions</div><h2>Before you join</h2></div></div>
