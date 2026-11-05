@@ -124,7 +124,7 @@
       { id: 'glimmer_lantern', name: 'Glimmer Lantern', rarity: 'epic', stat: 'bestHealing', need: 10000, animated: true },
       { id: 'bounty_purse', name: 'Bounty Purse', rarity: 'epic', stat: 'bountyRunes', need: 40, parsed: true, animated: true },
       { id: 'second_life_shield', name: 'Second Life Shield', rarity: 'legendary', stat: 'comebackWins', need: 5, animated: true },
-      { id: 'aegis_buckler', name: 'Aegis Buckler', rarity: 'legendary', stat: 'aegis', need: 3, animated: true },
+      { id: 'aegis_buckler', name: 'Aegis Buckler', rarity: 'legendary', stat: 'aegis', need: 10, animated: true },
     ] },
     { id: 'boots', name: 'Boots', items: [
       { id: 'none', name: 'Recruit Shoes', rarity: 'starter', free: true },
@@ -252,7 +252,7 @@
     totalAssists: n => `Get ${n} assists this season`,
     noKillWins: n => `Win ${n} games without getting a kill`,
     bestHealing: n => `Heal ${k(n)} in one game`,
-    aegis: n => (n === 1 ? 'Snatch the Aegis' : `Snatch the Aegis ${n} times`),
+    aegis: n => (n === 1 ? 'Pick up the Aegis' : `Pick up the Aegis ${n} times`),
     morningGames: n => `Play ${n} games between 6am and noon`,
     bestDayGames: n => `Play ${n} games in one day`,
     bestDenies: n => `Deny ${n} creeps in one game`,
