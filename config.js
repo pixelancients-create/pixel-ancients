@@ -24,7 +24,8 @@ window.LEAGUE_CONFIG = {
     name: 'Trial Season',
     start: '2026-11-02',            // a Monday
     weeks: 2,
-    replaysFrom: '2026-11-04',      // only parse replays of games from this day on; '' = the whole season// regular weeks; a finals week follows
+    replaysFrom: '2026-11-04',
+    countFromJoin: '2026-11-04',    // players who register on or after this day count games from their registration day (from 12am); '' = everyone counts the whole season// only parse replays of games from this day on; '' = the whole season// regular weeks; a finals week follows
   },
 
   scoring: {
