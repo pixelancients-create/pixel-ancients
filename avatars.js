@@ -73,7 +73,7 @@
       { id: 'champion_mail', name: 'Hard Carry Mail', rarity: 'legendary', stat: 'weekTop3', need: 3, animated: true },
       { id: 'pos1_silk', name: 'Pos 1 Silk', rarity: 'legendary', stat: 'bestHeroDamage', need: 60000, animated: true },
       { id: 'million_plate', name: 'Million Damage Plate', rarity: 'legendary', stat: 'totalHeroDamage', need: 1000000, animated: true },
-      { id: 'unkillable_carapace', name: 'Unkillable Carapace', rarity: 'legendary', stat: 'bestDamageTakenWin', need: 100000, parsed: true, animated: true },
+      { id: 'unkillable_carapace', name: 'Unkillable Carapace', rarity: 'legendary', stat: 'bestDamageTakenWin', need: 60000, parsed: true, animated: true },
     ] },
     { id: 'cape', name: 'Cape', items: [
       { id: 'none', name: 'No Cape', rarity: 'starter', free: true },
