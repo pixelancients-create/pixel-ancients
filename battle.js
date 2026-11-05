@@ -251,7 +251,7 @@
     killStack: v => `Team +${v}% attack for every enemy that falls`, late: v => `Team +${v}% attack late in the fight`, lifesteal: v => `Team heals ${v}% of damage dealt`,
   };
   const RUNES = {
-    dd: { name: 'Double Damage', fx: { atkPct: 15 } },
+    dd: { name: 'Amplify Damage', fx: { atkPct: 15 } },
     haste: { name: 'Haste', fx: { spd: 2.5 } },
     regen: { name: 'Regeneration', fx: { regen: 5 } },
   };
@@ -372,6 +372,8 @@
   // ---------- the battle ----------
   const MAX_ACTIONS = 320;
   const COMEBACK = 10;                                          // % attack per fallen ally
+  const STACK_EXTRA = 0.2;                                      // extra copies of the same team buff add 20% each
+  const SLOW_CAP = 0.15;                                        // slows take at most 15% of a fighter's speed
   function simulate(teamA, teamB, seed, opts = {}) {
     const R = seeded(String(seed));
     const T = [buildTeam(teamA, 'a'), buildTeam(teamB, 'b')];
@@ -388,14 +390,9 @@
       const fx = { atkPct: 0, armor: 0, spd: 0, eva: 0, crit: 0, regen: 0, shield: 0, lifesteal: 0, firstBlood: 0, lowHeal: 0, killStack: 0, late: 0, warcry: 0, rally: 0, vision: 0 };
       const ids = [...new Set(t.units.flatMap(u => u.auras))];
       ids.forEach(id => Object.entries(ITEMS[id].aura).forEach(([k, v]) => { fx[k] += v; }));
-      t.units.forEach(u => {
-        if (u.ab.command) fx.atkPct += u.ab.command;
-        if (u.ab.founder) fx.spd += u.ab.founder;
-        if (u.ab.haste) fx.spd += u.ab.haste;
-        if (u.ab.warcry) fx.warcry += u.ab.warcry;
-        if (u.ab.rally) fx.rally += u.ab.rally;
-        if (u.ab.vision) fx.vision += u.ab.vision;
-      });
+      // team buffs from items: the strongest copy counts in full, every extra copy on the team adds STACK_EXTRA of its value
+      const stack = k => { const v = t.units.map(u => u.ab[k] || 0).filter(Boolean).sort((x, y) => y - x); return v.length ? v[0] + v.slice(1).reduce((s, x) => s + x * STACK_EXTRA, 0) : 0; };
+      fx.atkPct += stack('command'); fx.spd += stack('founder') + stack('haste'); fx.warcry += stack('warcry'); fx.rally += stack('rally'); fx.vision += stack('vision');
       t.runes.forEach(r => RUNES[r] && Object.entries(RUNES[r].fx).forEach(([k, v]) => { fx[k] += v; }));
       const other = T[t.side === 'a' ? 1 : 0];
       t.underdog = opts.underdog && other.power > t.power ? Math.min(40, Math.round((other.power / t.power - 1) * 100 * opts.underdog)) : 0;
@@ -445,9 +442,12 @@
     }
 
     // returns true when the stun lands
+    // stun break: after a stun or hex, a fighter can't be stunned again until it has had one free turn
     function stunT(t, kind) {
+      if (t.actions < (t.stunGuard || 0)) return false;
       if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); return false; }
       if (kind === 'hex') t.stun = Math.max(t.stun, 1); else { t.stun = 1; log({ k: 'stun', t: t.key }); }
+      t.stunGuard = t.actions + 2;
       return true;
     }
 
@@ -544,7 +544,7 @@
       if (before > 0 && t.hp > 0) {
         if (s.ab.burn) t.dots.push({ v: s.ab.burn, left: 3, src: s.key, kind: 'burn' });
         if (s.ab.bleed) t.dots.push({ v: s.ab.bleed, left: 3, src: s.key, kind: 'bleed' });
-        if (s.ab.harass) t.slow = Math.min(t.spd * 0.4, t.slow + s.ab.harass);
+        if (s.ab.harass) t.slow = Math.min(t.spd * SLOW_CAP, t.slow + s.ab.harass);
         if (t.dots.length > 6) t.dots.splice(0, t.dots.length - 6);
       }
       const ls = (s.ab.lifesteal || 0) + teamOf(s).fx.lifesteal;
@@ -671,7 +671,7 @@
             d *= 100 / (100 + Math.max(0, armorOf(t)) * 6);
             const dealt = damage(t, d, u, 'pet');
             log({ k: 'pet', s: u.key, t: t.key, d: dealt, a: tag, h: Math.max(0, t.hp) });
-            if (t.hp > 0 && P.a === 'petSlow') t.slow = Math.min(t.spd * 0.4, t.slow + P.p);
+            if (t.hp > 0 && P.a === 'petSlow') t.slow = Math.min(t.spd * SLOW_CAP, t.slow + P.p);
             if (t.hp > 0 && P.a === 'petReveal') t.evaDebuff = Math.min(P.p * 4, t.evaDebuff + P.p);
             if (t.hp > 0 && ((P.a === 'petStun' && R() * 100 < P.p) || (P.a === 'petChomp' && R() < 0.2))) stunT(t);
           };

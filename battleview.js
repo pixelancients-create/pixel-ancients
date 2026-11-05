@@ -247,7 +247,13 @@
     guardian: { skin: 3, hair: 'mohawk', hairColor: 4, tunic: 4, head: 'unbroken_helm', body: 'offlane_plate', cape: 'radiant_banner', weapon: 'throne_breaker', offhand: 'none', boots: 'rat_treads', pet: 'none', aura: 'none' },
   };
   const CAST_NAME = { nuke: 'Nuke!', wombo: 'Wombo Combo!', waveClear: 'Wave Clear!', stomp: 'Stomp!', heal: 'Heal', healAll: 'Mass Heal', hex: 'Hex!', blink: 'Blink!', silence: 'Silence!', fizzle: 'Fizzled', resist: 'Resisted', wipe: 'Team Wipe!', harden: 'Harden!', arcane: 'Arcane!', glimmer: 'Glimmer', courier: 'Courier', bottle: 'Bottle' };
-  const RUNE_NAME = { dd: 'Double Damage', haste: 'Haste', regen: 'Regen', water: 'Water' };
+  const RUNE_NAME = { dd: 'Amplify Damage', haste: 'Haste', regen: 'Regeneration', water: 'Water' };
+  // short effect text for a rune, from the battle settings (e.g. "+15% atk")
+  function runeFx(r) {
+    const B = root.LeagueBattle, fx = B && B.RUNES[r] ? B.RUNES[r].fx : {};
+    return Object.entries(fx).map(([k, v]) => (k === 'atkPct' ? `+${v}% atk` : k === 'spd' ? `+${v} spd` : k === 'regen' ? `+${v} HP/turn` : '')).filter(Boolean).join(' ');
+  }
+  const runeImg = (r, now) => { const A = root.LeagueAvatars; return A && A.runeCanvas ? A.runeCanvas(r, Math.floor((now || 0) / 260) & 3) : null; };
   const FONT = '"Fira Sans", system-ui, sans-serif';
 
   // ---------- scene state ----------
@@ -289,6 +295,12 @@
 
   function applyStep(sc, i, now) {
     const evs = sc.steps[i] || [];
+    // round start: each guild's runes float up over its team
+    if (i === 0) sc.result.teams.forEach((t, ti) => (t.runes || []).forEach((r, k) => {
+      const side = ti ? 'b' : 'a', us = Object.values(sc.units).filter(u => u.side === side && u.row === 0);
+      const cx = us.length ? us.reduce((s, u) => s + u.x, 0) / us.length + SPR / 2 : (side === 'a' ? 180 : W - 180);
+      sc.shouts.push({ x: cx, y: 92, text: 'Rune: ' + RUNE_NAME[r], color: '#6fe0f0', t0: now + 150 + k * 1500, rune: r, long: true });
+    }));
     if (sc.sfx) stepSounds(sc, evs).forEach(n => sc.sfx(n));
     for (const e of evs) {
       const U = k => sc.units[k];
@@ -310,7 +322,7 @@
       else if (e.k === 'revive') { const t = U(e.t); t.alive = true; t.hpNow = e.h; t.anim = 'b_cast'; t.animT0 = now + 250; sc.shouts.push({ x: t.x + SPR / 2, y: t.y - 14, text: 'Buyback!', color: '#ffcf4a', t0: now + 250 }); }
       else if (e.k === 'save') { const t = U(e.t); t.hpNow = e.h; sc.shouts.push({ x: t.x + SPR / 2, y: t.y - 14, text: 'Saved!', color: '#8fd06a', t0: now + 200 }); }
       else if (e.k === 'stun' || e.k === 'stunned') { const t = U(e.t || e.u); sc.floaters.push({ x: t.x + SPR / 2, y: t.y - 4, text: e.k === 'stun' ? 'STUN' : 'zzz', color: '#a8d4f0', t0: now + 160 }); }
-      else if (e.k === 'rune') { const u = U(e.u); sc.shouts.push({ x: u.x + SPR / 2, y: u.y - 14, text: 'Rune: ' + RUNE_NAME[e.r], color: '#6fe0f0', t0: now }); }
+      else if (e.k === 'rune') { const u = U(e.u); sc.shouts.push({ x: u.x + SPR / 2, y: u.y - 14, text: 'Rune: ' + RUNE_NAME[e.r], color: '#6fe0f0', t0: now, rune: e.r }); }
       else if (e.k === 'counter') { const u = U(e.s); sc.shouts.push({ x: u.x + SPR / 2, y: u.y - 14, text: 'Counter!', color: '#ffb09a', t0: now }); }
       else if (e.k === 'end') { sc.ended = true; sc.endT = now; Object.values(sc.units).forEach(u => { if (u.alive && (u.side === 'a') === (e.w === 0)) { u.anim = 'b_win'; u.animT0 = now + 400; } }); }
     }
@@ -478,15 +490,31 @@
     }
     text(ctx, u.name.length > 13 ? u.name.slice(0, 12) + '…' : u.name, u.x + SPR / 2, u.y + SPR + 4, u.alive ? '#e6dfd4' : '#6c645c', 9, 'center', 600);
   }
-  function drawHud(ctx, sc) {
+  // one line of badges ("1240 power · [rune] Amplify Damage +15% atk"), rune icons drawn in front of their text
+  function drawBadges(ctx, badges, x, y, left, now) {
+    ctx.font = `600 8px ${FONT}`;
+    const IC = 9, gap = 3, sep = ' · ', sepW = ctx.measureText(sep).width;
+    let widths = badges.map(b => ctx.measureText(b.s).width + (b.r ? IC + gap : 0));
+    let total = widths.reduce((s, w) => s + w, 0) + sepW * (badges.length - 1);
+    // too long to fit before the VS: runes show just their icon and effect (their names are in the round-start shout)
+    if (total > 196) { badges = badges.map(b => (b.r ? { ...b, s: runeFx(b.r) } : b)); widths = badges.map(b => ctx.measureText(b.s).width + (b.r ? IC + gap : 0)); total = widths.reduce((s, w) => s + w, 0) + sepW * (badges.length - 1); }
+    let cx = left ? x : x - total;
+    badges.forEach((b, i) => {
+      if (i) { text(ctx, sep, cx, y, '#9aa3ab', 8, 'left', 600); cx += sepW; }
+      if (b.r) { const im = runeImg(b.r, now); if (im) { ctx.imageSmoothingEnabled = false; ctx.drawImage(im, cx, y - IC / 2 - 0.5, IC, IC); } cx += IC + gap; }
+      text(ctx, b.s, cx, y, b.r ? '#d9e6ec' : '#9aa3ab', 8, 'left', 600);
+      cx += ctx.measureText(b.s).width;
+    });
+  }
+  function drawHud(ctx, sc, now) {
     const [ta, tb] = sc.result.teams;
     const side = (t, side) => {
       const left = side === 'a';
       const hp = Object.values(sc.units).filter(u => u.side === side).reduce((s, u) => s + Math.max(0, u.hpNow) / u.maxHp, 0) / 5;
       const x = left ? 10 : W - 10;
       text(ctx, t.name.toUpperCase(), x, 11, left ? '#ffb09a' : '#c8f5a0', 11, left ? 'left' : 'right', 800);
-      const badges = [`${Math.round(t.power)} power`].concat((t.runes || []).map(r => RUNE_NAME[r])).concat(t.underdog ? [`Underdog +${t.underdog}%`] : []);
-      text(ctx, badges.join(' · '), x, 24, '#9aa3ab', 8, left ? 'left' : 'right', 600);
+      const badges = [{ s: `${Math.round(t.power)} power` }].concat((t.runes || []).map(r => ({ s: `${RUNE_NAME[r]} ${runeFx(r)}`, r }))).concat(t.underdog ? [{ s: `Underdog +${t.underdog}%` }] : []);
+      drawBadges(ctx, badges, x, 24, left, now);
       const bw = 170, bx = left ? 10 : W - 10 - bw;
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx, 32, bw, 4);
       ctx.fillStyle = left ? '#e8553e' : '#8fc84f'; const fill = Math.round(bw * hp); ctx.fillRect(left ? bx : bx + bw - fill, 32, fill, 4);
@@ -509,12 +537,14 @@
     }
     sc.floaters = sc.floaters.filter(f => now - f.t0 < 800);
     for (const s of sc.shouts) {
-      const p = (now - s.t0) / 1000; if (p < 0) continue;
+      const len = s.long ? 1600 : 1000, p = (now - s.t0) / len; if (p < 0) continue;
       ctx.globalAlpha = Math.max(0, 1 - Math.max(0, p - 0.6) * 2.5);
-      text(ctx, s.text, s.x, s.y - p * 6, s.color, 11, 'center', 800);
+      const y = s.y - p * (s.long ? 18 : 6);
+      if (s.rune) { const im = runeImg(s.rune, now); if (im) { ctx.imageSmoothingEnabled = false; const z = s.long ? 22 : 14; ctx.drawImage(im, s.x - z / 2, y - z - 8, z, z); } }
+      text(ctx, s.text, s.x, y, s.color, 11, 'center', 800);
       ctx.globalAlpha = 1;
     }
-    sc.shouts = sc.shouts.filter(s => now - s.t0 < 1000);
+    sc.shouts = sc.shouts.filter(s => now - s.t0 < (s.long ? 1600 : 1000));
     if (sc.flash && now - sc.flash < 140) { ctx.fillStyle = `rgba(255,240,200,${0.18 * (1 - (now - sc.flash) / 140)})`; ctx.fillRect(0, 0, W, H); }
   }
   function drawEnd(ctx, sc, now) {
@@ -531,7 +561,7 @@
     const order = Object.values(sc.units).sort((a, b) => a.y - b.y);
     order.filter(u => !u.alive).forEach(u => drawUnit(ctx, u, now));
     order.filter(u => u.alive).forEach(u => drawUnit(ctx, u, now));
-    drawFx(ctx, sc, now); drawHud(ctx, sc); drawEnd(ctx, sc, now);
+    drawFx(ctx, sc, now); drawHud(ctx, sc, now); drawEnd(ctx, sc, now);
   }
 
   // advance the scene to time t (ms since start at 1x)

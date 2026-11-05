@@ -306,6 +306,32 @@
   .tag.Abandon { border-color: rgba(214, 73, 58, .7); color: var(--dire); }
   .tag.party { color: var(--text); }
   .tag.party .unsure { margin-left: 2px; opacity: .6; }
+  .rune-ic { image-rendering: pixelated; vertical-align: middle; flex: none; }
+  .pod-rune { display: flex; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; align-items: center; gap: 7px; margin-top: 10px; padding: 5px 8px 5px 5px; border: 1px solid rgba(216, 178, 92, .4); background: rgba(216, 178, 92, .06); text-align: left; font: 600 11.5px/1.25 var(--body); letter-spacing: 0; text-transform: none; color: var(--text); }
+  .pod-rune small { display: block; font-weight: 500; font-size: 10.5px; color: var(--muted); }
+  @media (max-width: 600px) {
+    .pod-rune { flex-direction: column; text-align: center; gap: 3px; padding: 6px 4px; font-size: 10.5px; overflow-wrap: anywhere; }
+    .pod-rune small { font-size: 9.5px; }
+    .pod-rune .rune-ic { width: 22px; height: 22px; }
+  }
+  .rune-table .rune-name { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; }
+  .rules-h3 { margin: 22px 0 10px; font: 700 13px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .runes-week { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; font-size: 13.5px; }
+  .runes-week .lbl { font: 700 11px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .runes-week .rw-g { display: inline-flex; align-items: center; gap: 6px; } .runes-week .none { color: var(--muted); }
+  .rune-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border: 1px solid var(--line); background: var(--panel); font-weight: 600; }
+  .rune-chip small { color: var(--muted); font-weight: 500; }
+  .guild-runes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .guild-runes .gr-col { background: var(--panel); border: 1px solid var(--line); padding: 14px 16px; }
+  .guild-runes .gr-h { font: 700 11px/1.3 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .guild-runes .gr-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .guild-runes .gr-row + .gr-row { border-top: 1px solid var(--line); }
+  .guild-runes .gr-row b { font-weight: 700; } .guild-runes .fx { color: var(--gold); font-size: 13px; }
+  .guild-runes .gr-row small { display: block; color: var(--muted); font-size: 12.5px; }
+  .guild-runes .gr-none { margin: 0; color: var(--muted); font-size: 13.5px; }
+  .guild-runes.compact { margin-top: 12px; } .guild-runes.compact .gr-col { padding: 10px 12px; background: var(--panel-2); }
+  @media (max-width: 700px) { .guild-runes { grid-template-columns: 1fr; } }
+  .fr-runes { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
   .tag.x2 { color: var(--gold); border-color: rgba(216, 178, 92, .5); margin-left: 4px; }
   .tag.party.p1 { border-color: rgba(216, 178, 92, .6); color: var(--gold); }
   .tag.party.p4, .tag.party.p5 { border-color: rgba(143, 200, 79, .45); color: var(--radiant); }
@@ -968,6 +994,19 @@
       : (isCurrent || !active.length ? `Play ${modesOr} to get on the board.` : `Nobody played ${MIN_GAMES} games, so nobody was ranked.`);
 
     const ORD = n => ['1ST', '2ND', '3RD'][n - 1] || `${n}TH`;
+    // the rune this podium spot earns its guild for the next weekend's Fight Nights
+    const wkend = runeWeekend(state.week);
+    const podRune = r => {
+      if (!guildsOn || !r.rank || r.rank > 3) return '';
+      const rn = RUNE_BY_RANK[r.rank - 1], g = guildOfMember(state.members.find(m => m.id === r.id));
+      const name = esc(runeName(rn)), fx = esc(runeEffect(rn).replace(/^Team /, ''));
+      let line, sub;
+      if (!g) { line = name; sub = 'Join a guild to use this rune'; }
+      else if (isCurrent) { line = r.qualified ? `On track for ${name}` : name; sub = r.qualified ? `${fx} for [${esc(guildTag(g))}] on ${wkend.label}` : `Qualify to earn it for [${esc(guildTag(g))}]`; }
+      else if (state.now < wkend.end) { line = `${name} for [${esc(guildTag(g))}]`; sub = `${fx} · Fight Nights ${wkend.label}`; }
+      else { line = `${name} · [${esc(guildTag(g))}]`; sub = `Used on ${wkend.label}`; }
+      return `<div class="pod-rune">${runeIcon(rn, 26)}<span>${line}<small>${sub}</small></span></div>`;
+    };
     const top3 = ranked.slice(0, 3);
     const podium = [1, 0, 2].map(i => {
       const r = top3[i];
@@ -980,6 +1019,7 @@
           <div class="who">${esc(r.name)}</div>
           <div class="val"><b class="num">${r.points}</b> pts · <span class="w">${r.wins}W</span> <span class="l">${r.losses}L</span></div>
           ${!r.qualified ? `<div class="needs">Needs ${r.needs} more game${r.needs === 1 ? '' : 's'}</div>` : ''}
+          ${podRune(r)}
         </div>
       </div>`;
     }).join('');
@@ -1207,12 +1247,21 @@
           <li>Every match is best of 3: the first guild to win 2 rounds takes the match. HP resets between rounds; lineups, gear, runes and the Underdog bonus stay the same.</li>
           <li>Guilds are paired with the guild closest in power, avoiding an immediate rematch. An odd guild out fights the Ancient Guardians, geared to match its power.</li>
           <li>The weaker guild in a pairing gets an Underdog bonus: ${Math.round(GCFG.underdog * 100)}% of the power gap as extra attack and HP (up to 40%).</li>
-          <li>Last week's Weekly Points top 3 give their guild a rune for that weekend's fights: Double Damage (1st), Haste (2nd), Regeneration (3rd).</li>
+          <li>Each week's Weekly Points top 3 give their guild a rune for the next weekend's Fight Nights (see the table below).</li>
           <li>Positions 1–2 are the front line, 3–5 the back line. Melee attackers must get through the front line first; ranged and magic attackers can hit anyone.</li>
           <li>A guild needs ${GCFG.minMembers} members to fight. Empty slots are filled by Lane Creeps.</li>
           ${GCFG.switchCooldown ? '<li>If you leave a guild, you can join another straight away but sit out its fights until the following Monday.</li>' : ''}
           <li>Season Champion is the guild with the most match wins. Ties go to round difference (rounds won minus rounds lost), then the most enemy HP destroyed, then the strongest opponents faced.</li>
           <li>Every round is seeded, so anyone can replay it and see exactly the same battle.</li>
+        </ul>
+        <h3 class="rules-h3">Runes</h3>
+        <table class="table rune-table"><thead><tr><th>Weekly place</th><th>Rune</th><th>Effect in battle</th></tr></thead><tbody>
+          ${RUNE_BY_RANK.map((r, i) => `<tr><td>${['1st', '2nd', '3rd'][i]}</td><td><span class="rune-name">${runeIcon(r, 30)}${esc(runeName(r))}</span></td><td>${esc(runeEffect(r))}</td></tr>`).join('')}
+        </tbody></table>
+        <ul>
+          <li>A rune lasts for every round of both Fight Nights on the weekend after the week it was earned.</li>
+          <li>Only players who qualified for the final top 3 earn a rune, and only if they're in a guild. A guild can hold more than one rune when several members finish top 3.</li>
+          ${(() => { const f = runeWeekend(S.weekStartDay(S.parseLocalDate(CFG.season.start, TZ), TZ)); return f.label ? `<li>The first runes come from the season's first week and are used on ${f.label}.</li>` : ''; })()}
         </ul>` : ''}
         ${FEAT.league ? `<h2>League ELO</h2>
         <p>Only community lobby matches count. Everyone starts the season at ${e.start}. After each match, every player on a team moves by the same amount, based on the two teams' average ratings: beating a stronger team earns more.</p>
@@ -1635,6 +1684,7 @@
           i.src = A.toDataURL(i._lo, anim === 'idle' ? tick + i._phase : tick, anim);
         } catch {}
       });
+      if (tick % 2 === 0) document.querySelectorAll('img[data-rune]').forEach(i => { if (!i.offsetParent) return; const u = A.runeURL(i.dataset.rune, (tick >> 1) & 3); if (u) i.src = u; });
       if (tick % 2 === 0) document.querySelectorAll('img[data-icon]').forEach(i => { if (!i.offsetParent) return; const [sl, id] = i.dataset.icon.split('|'); const u = A.iconURL(sl, id, (tick >> 1) & 3); if (u) i.src = u; });
     }, 150);
   })();
@@ -2070,6 +2120,61 @@
     }
     return null;
   }
+  // ---- runes: last week's qualified top 3 give their guild a rune for the next weekend's Fight Nights ----
+  const RUNE_BY_RANK = ['dd', 'haste', 'regen'];
+  const runeName = r => (B.RUNES[r] ? B.RUNES[r].name : r);
+  const runeEffect = r => Object.entries((B.RUNES[r] || {}).fx || {}).map(([k, v]) => (k === 'atkPct' ? `Team +${v}% attack` : k === 'spd' ? `Team +${v} speed` : k === 'regen' ? `Team heals ${v} HP a turn` : '')).filter(Boolean).join(', ');
+  const runeIcon = (r, size = 24) => `<img class="rune-ic" data-rune="${r}" src="${A.runeURL(r, 0)}" width="${size}" height="${size}" alt="">`;
+  // the Fight Night days a week's runes are used on (the weekend of the following week), e.g. "14–15 Nov"
+  function runeWeekend(week) {
+    const days = []; for (let d = week + 7; d < week + 14; d++) if (GCFG.fightDays.includes((d + 4) % 7)) days.push(d);
+    if (!days.length) return { label: '', end: 0 };
+    const a = localDate(S.dayToTs(days[0], TZ)), b = localDate(S.dayToTs(days[days.length - 1], TZ));
+    const label = a.getUTCMonth() === b.getUTCMonth() ? `${a.getUTCDate()}–${b.getUTCDate()} ${MONTHS[b.getUTCMonth()]}` : `${fmtDay(S.dayToTs(days[0], TZ))} – ${fmtDay(S.dayToTs(days[days.length - 1], TZ))}`;
+    return { label: days.length === 1 ? fmtDay(S.dayToTs(days[0], TZ)) : label, start: S.dayToTs(days[0], TZ), end: S.dayToTs(days[days.length - 1], TZ) + GCFG.fightHour * 3600 + 3600 };
+  }
+  const guildOfMember = m => (m ? guildOfDiscord(avatarKey(m)) : null);
+  // runes each guild holds for a Fight Night at `at`: { [guildId]: ['dd', ...] }
+  function runesForFight(at) {
+    const runeOf = B.runesFor(S.weeklyTable(state.members, state.scored, S.weekStartDay(at, TZ) - 7, CFG, { final: true }));
+    const out = {};
+    (state.guilds || []).forEach(g => {
+      const rs = [...new Set((g.members || []).filter(m => eligible(m, at)).map(m => { const p = memberByDiscord(m.discord_id); return p ? runeOf[p.id] : null; }).filter(Boolean))];
+      if (rs.length) out[g.id] = RUNE_BY_RANK.filter(r => rs.includes(r));
+    });
+    return out;
+  }
+  // runes a guild holds for the fight at `at`, with who earned them: [{ r, name, rank }]
+  function runeEarners(g, at) {
+    const wk = S.weekStartDay(at, TZ) - 7, rows = S.weeklyTable(state.members, state.scored, wk, CFG, { final: true });
+    const out = [];
+    (g.members || []).filter(m => eligible(m, at)).forEach(m => { const p = memberByDiscord(m.discord_id), row = p && rows.find(x => x.id === p.id);
+      if (row && row.rank != null && row.rank <= 3 && row.played > 0) out.push({ r: RUNE_BY_RANK[row.rank - 1], name: row.name, rank: row.rank }); });
+    return out.sort((a, b) => a.rank - b.rank);
+  }
+  // members currently in this week's top 3: the runes the guild is on track for next weekend
+  function runeOnTrack(g) {
+    const wk = S.weekStartDay(state.now, TZ), rows = S.weeklyTable(state.members, state.scored, wk, CFG, { final: false });
+    const out = [];
+    (g.members || []).forEach(m => { const p = memberByDiscord(m.discord_id), row = p && rows.find(x => x.id === p.id);
+      if (row && row.rank != null && row.rank <= 3 && row.played > 0) out.push({ r: RUNE_BY_RANK[row.rank - 1], name: row.name, rank: row.rank, needs: row.qualified ? 0 : row.needs }); });
+    return { list: out.sort((a, b) => a.rank - b.rank), weekend: runeWeekend(wk) };
+  }
+  const ORDN = n => ['1st', '2nd', '3rd'][n - 1];
+  function guildRunePanel(g, compact) {
+    const nf = nextFight(), now = nf ? runeEarners(g, nf) : [], on = runeOnTrack(g);
+    const nowWk = nf ? runeWeekend(S.weekStartDay(nf, TZ) - 7) : null;
+    const row = (x, sub) => `<div class="gr-row">${runeIcon(x.r, compact ? 22 : 28)}<div><b>${esc(runeName(x.r))}</b> <span class="fx">${esc(runeEffect(x.r))}</span><small>${sub}</small></div></div>`;
+    const a = now.length ? now.map(x => row(x, `Earned by ${esc(x.name)} (${ORDN(x.rank)} last week)`)).join('')
+      : `<p class="gr-none">None${nf ? '. Runes come from last week\'s top 3' : ''}.</p>`;
+    const b = on.list.length ? on.list.map(x => row(x, x.needs ? `${esc(x.name)} is ${ORDN(x.rank)} this week · needs ${x.needs} more game${x.needs === 1 ? '' : 's'} to qualify` : `${esc(x.name)} is ${ORDN(x.rank)} this week · locks in Sunday night`)).join('')
+      : `<p class="gr-none">Nobody in the top 3 yet. Finish the week in the top 3 to earn your guild a rune.</p>`;
+    return `<div class="guild-runes${compact ? ' compact' : ''}">
+      <div class="gr-col"><div class="gr-h">Runes this weekend${nowWk && nowWk.label ? ` · ${nowWk.label}` : ''}</div>${a}</div>
+      <div class="gr-col"><div class="gr-h">On track for next weekend${on.weekend.label ? ` · ${on.weekend.label}` : ''}</div>${b}</div>
+    </div>`;
+  }
+  const runeChips = rs => rs.map(r => `<span class="rune-chip" title="${esc(runeEffect(r))}">${runeIcon(r, 20)}${esc(runeName(r))} <small>${esc(runeEffect(r))}</small></span>`).join('');
   const nightsDone = () => [...new Set(state.fights.map(r => r.fight))];
   const resultsOf = fid => state.fights.filter(r => r.fight === fid);
 
@@ -2142,6 +2247,14 @@
     return `<div class="roster-strip">${slots}</div>`;
   }
   function guildLabel(g, size = 28) { return `<span class="glabel">${crestImg(g.crest, size)}<span><span class="gtag">[${esc(guildTag(g))}]</span> ${esc(guildName(g))}</span></span>`; }
+  // the rune icons each side carried in a fight (from that Fight Night's frozen snapshot)
+  function fightRunes(r) {
+    const snap = state.fightSnaps && state.fightSnaps[r.fight]; if (!snap) return '';
+    const of = id => ((snap.guilds || []).find(g => g.id === id) || {}).runes || [];
+    const ic = rs => rs.map(x => `<span title="${esc(runeName(x) + ': ' + runeEffect(x))}">${runeIcon(x, 16)}</span>`).join('');
+    const a = of(r.a), b = r.b ? of(r.b) : [];
+    return a.length || b.length ? `<span class="fr-runes">${ic(a)}${a.length && b.length ? ' vs ' : ''}${ic(b)}</span> · ` : '';
+  }
   function resultLine(r) {
     const a = guildInfo(r.a), b = guildInfo(r.b);
     const tagA = r.winner === 0 ? 'W' : 'L', tagB = r.winner === 1 ? 'W' : 'L';
@@ -2149,7 +2262,7 @@
       <span class="side">${guildLabel(a, 24)} <b class="res ${tagA}">${tagA}</b></span>
       <span class="vs${r.score ? ' score' : ''}">${r.score ? r.score.join('–') : 'vs'}</span>
       <span class="side right"><b class="res ${tagB}">${tagB}</b> ${guildLabel(b, 24)}</span>
-      <span class="meta">MVP ${esc(r.mvpName)}${r.rounds && r.rounds.length === 3 ? ' · went to 3 rounds' : ''}${r.underdog && (r.underdog[0] || r.underdog[1]) ? ` · underdog +${Math.max(...r.underdog)}%` : ''} · Watch ›</span></a>`;
+      <span class="meta">${fightRunes(r)}MVP ${esc(r.mvpName)}${r.rounds && r.rounds.length === 3 ? ' · went to 3 rounds' : ''}${r.underdog && (r.underdog[0] || r.underdog[1]) ? ` · underdog +${Math.max(...r.underdog)}%` : ''} · Watch ›</span></a>`;
   }
   function gGate() {
     if (!CFG.demo && !loginEnabled) return '<div class="gate empty"><strong>Guilds need the Discord login</strong>An admin needs to connect Discord login and run the guild part of supabase/schema.sql (see README.md).</div>';
@@ -2171,6 +2284,7 @@
         <div class="eyebrow">Fight Night · ${esc(fightWhen)}</div>
         <h1>Guilds</h1>
         <p class="tagline">${next ? `Next Fight Night: ${fmtDateTime(next)}` : 'The season\'s Fight Nights are done.'}</p>
+        ${next ? (() => { const rr = runesForFight(next), ids = Object.keys(rr); return `<div class="runes-week"><span class="lbl">Runes this weekend</span>${ids.length ? ids.map(id => `<span class="rw-g"><b>[${esc(guildTag(state.guilds.find(g => g.id === id)))}]</b>${runeChips(rr[id])}</span>`).join('') : '<span class="none">None yet. Runes come from last week\'s Weekly Points top 3 (<a href="#rules">how runes work</a>).</span>'}</div>`; })() : ''}
         <p class="sub">Team up with up to 5 players. Your pixel avatars fight a best-of-3 match against a guild of similar power every Fight Night, automatically, with the gear you've unlocked. Best record at the end of the season is Season Champion.</p>
       </div>`;
     const me = CFG.demo ? lockerPlayer() : (state.session ? lockerPlayer() : null);
@@ -2271,6 +2385,8 @@
       </div>
       ${demoPicker()}
       ${state.gMsg ? `<div class="gmsg" role="status">${esc(state.gMsg)}</div>` : ''}
+      <div class="section-head"><div><div class="eyebrow">Fight Night buffs</div><h2>Runes</h2></div><a class="btn" href="#rules">How runes work</a></div>
+      ${guildRunePanel(g)}
       <div class="section-head"><div><div class="eyebrow">${g.members.length}/5</div><h2>Roster</h2></div>${cap ? '<button class="btn-red" data-g="positions">Save positions</button>' : ''}</div>
       <table class="table"><thead><tr><th>Player</th><th>Position</th><th class="r hide-sm">Power</th><th class="r"></th></tr></thead><tbody>${roster}</tbody></table>
       ${cap ? `

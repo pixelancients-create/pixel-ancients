@@ -171,7 +171,7 @@
       { id: 'bronze_aura', name: 'Bronze Podium Aura', rarity: 'rare', stat: 'weekThird', need: 1 },
       { id: 'smoke_aura', name: 'Smoke Cloud Aura', rarity: 'rare', stat: 'stacks', need: 40 },
       { id: 'shrine_aura', name: 'Shrine Aura', rarity: 'rare', stat: 'totalHealing', need: 30000 },
-      { id: 'storm', name: 'Double Damage Aura', rarity: 'epic', stat: 'wins', need: 40 },
+      { id: 'storm', name: '"Double Damage" Aura', rarity: 'epic', stat: 'wins', need: 40 },
       { id: 'snowfall', name: 'Glyph Aura', rarity: 'epic', stat: 'kdaBonuses', need: 25 },
       { id: 'runner_up_aura', name: 'Runner-Up Aura', rarity: 'epic', stat: 'weekSecond', need: 1 },
       { id: 'godlike', name: 'Godlike Aura', rarity: 'legendary', stat: 'seasonPoints', need: 875, animated: true },
@@ -1743,8 +1743,122 @@
     return best;
   }
 
+  // ---------- rune icons (Amplify Damage, Haste, Regeneration, Water) ----------
+  const RuneArt = (function () {
+  const S = 24, C = 11.5;   // rune icons: a glowing stone with a glyph, 24x24, 4 pulse frames
+  const RUNE_ART = {
+    dd:    { name: 'Amplify Damage', c: { out: '#1a0f0d', dark: '#6e1a15', base: '#b8322a', light: '#e8553f', hi: '#ff9a7a', glyph: '#ffe2c4', glow: ['#ff7a4a', '#c8402b', '#7a2418'] } },
+    haste: { name: 'Haste',          c: { out: '#1c120a', dark: '#7a3410', base: '#d9661f', light: '#ff9a3c', hi: '#ffcf80', glyph: '#fff4cc', glow: ['#ffc35a', '#e07a24', '#8a4414'] } },
+    regen: { name: 'Regeneration',   c: { out: '#0e160d', dark: '#1f5420', base: '#3f9a3a', light: '#6fd060', hi: '#b4f09a', glyph: '#efffe0', glow: ['#a8f080', '#4fae44', '#24602a'] } },
+    water: { name: 'Water',          c: { out: '#0b1220', dark: '#173a70', base: '#2f6fc0', light: '#5aa8f0', hi: '#a8dcff', glyph: '#eef9ff', glow: ['#8fd0ff', '#3f86d8', '#1c4a88'] } },
+  };
+  // glyphs on the 24 grid, as strings ('#' = glyph pixel, '+' = glyph shadow)
+  const G = {
+    dd: [   // upward arrow with a strike bar: "more damage"
+      '...........#............',
+      '..........###...........',
+      '.........#####..........',
+      '........##+#+##.........',
+      '.......##.+#+.##........',
+      '..........+#+...........',
+      '..........+#+...........',
+      '.......#########........',
+      '..........+#+...........',
+      '..........+#+...........',
+    ],
+    haste: [ // double chevron
+      '.......##...##..........',
+      '........##...##.........',
+      '.........##...##........',
+      '..........##...##.......',
+      '.........##...##........',
+      '........##...##.........',
+      '.......##...##..........',
+    ],
+    regen: [],   // drawn by leaf()
+    water: [ // droplet
+      '...........#............',
+      '..........###...........',
+      '.........#####..........',
+      '........##o####.........',
+      '........#o#####.........',
+      '........#######.........',
+      '.........#####..........',
+      '..........###...........',
+    ],
+  };
+  // a leaf along the diagonal from bottom-left to top-right, with a vein and a short stem
+  function leaf(g, c) {
+    const ax = 7, ay = 16, bx = 16.5, by = 6.5, L = Math.hypot(bx - ax, by - ay);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const t = ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / (L * L);
+      if (t < 0 || t > 1) continue;
+      const px = ax + t * (bx - ax), py = ay + t * (by - ay), d = Math.hypot(x - px, y - py);
+      const w = 3.0 * Math.sin(Math.PI * Math.min(1, t * 1.06));          // widest in the middle, pointed tip
+      if (d <= w) g[y][x] = c.glyph;
+    }
+    for (let x = 9; x <= 14; x++) g[23 - x][x] = c.light;                 // the vein: one clean diagonal
+    g[17][6] = c.glyph; g[18][5] = c.glyph;                               // stem
+  }
+  const GLYPH_TOP = { dd: 7, haste: 8, regen: 7, water: 8 };
+
+  function grid() { return Array.from({ length: S }, () => Array(S).fill(null)); }
+  // stone: an octagon, lit from the top left
+  function inStone(x, y) { const dx = Math.abs(x - C), dy = Math.abs(y - C); return dx <= 7.6 && dy <= 7.6 && dx + dy <= 11.2; }
+  function draw(id, frame = 0) {
+    const r = RUNE_ART[id], c = r.c, g = grid();
+    // glow ring, pulsing: frame 0 dim -> 2 bright -> 3 mid
+    const amp = [0, 1, 2, 1][frame % 4];
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      if (inStone(x, y)) continue;
+      const dx = Math.abs(x - C), dy = Math.abs(y - C), d = Math.max(dx, dy, (dx + dy) / 1.47);
+      if (d <= 8.9 + amp * 0.55) g[y][x] = d <= 8.6 ? c.glow[2 - Math.min(2, amp)] : c.glow[2];
+    }
+    // sparkles that orbit
+    const sp = [[2, 4], [20, 2], [21, 19], [3, 20]];
+    sp.forEach(([sx, sy], i) => { if ((i + frame) % 4 === 0) { g[sy][sx] = c.hi; if (sy > 0) g[sy - 1][sx] = c.glow[0]; if (sy < S - 1) g[sy + 1][sx] = c.glow[0]; if (sx > 0) g[sy][sx - 1] = c.glow[0]; if (sx < S - 1) g[sy][sx + 1] = c.glow[0]; } });
+    // stone body with facets
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      if (!inStone(x, y)) continue;
+      const edge = !inStone(x - 1, y) || !inStone(x + 1, y) || !inStone(x, y - 1) || !inStone(x, y + 1);
+      if (edge) { g[y][x] = c.out; continue; }
+      const t = (x - C) + (y - C);            // diagonal light
+      g[y][x] = t < -6 ? c.light : t > 6 ? c.dark : c.base;
+      if (x + y === 10 || x + y === 11) g[y][x] = c.hi;                      // top-left facet line
+      if (x - y === 7 && y < 9) g[y][x] = c.light;
+    }
+    // glyph
+    const rows = G[id], top = GLYPH_TOP[id];
+    rows.forEach((row, j) => [...row].forEach((ch, i) => { const y = top + j, x = i; if (!inStone(x, y)) return; if (ch === '#') g[y][x] = c.glyph; else if (ch === '+') g[y][x] = c.dark; else if (ch === 'o') g[y][x] = c.hi; }));
+    if (id === 'regen') leaf(g, c);
+    // inner glow on the glyph when the rune is brightest
+    if (amp === 2) rows.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#' && (j + i) % 3 === 0) g[top + j][i] = '#ffffff'; }));
+    return g;
+  }
+  return { RUNE_ART, draw, SIZE: S };
+  })();
+  const runeCache = new Map();
+  function runeCanvas(id, frame = 0) {
+    if (!RuneArt.RUNE_ART[id] || typeof document === 'undefined') return null;
+    const key = id + '|' + (frame & 3);
+    if (runeCache.has(key)) return runeCache.get(key);
+    const g = RuneArt.draw(id, frame & 3), cv = document.createElement('canvas'); cv.width = cv.height = RuneArt.SIZE;
+    const x = cv.getContext('2d');
+    g.forEach((row, y) => row.forEach((v, i) => { if (v) { x.fillStyle = v; x.fillRect(i, y, 1, 1); } }));
+    runeCache.set(key, cv);
+    return cv;
+  }
+  const runeUrlCache = new Map();
+  function runeURL(id, frame = 0) {
+    const key = id + '|' + (frame & 3);
+    if (runeUrlCache.has(key)) return runeUrlCache.get(key);
+    const cv = runeCanvas(id, frame); const u = cv ? cv.toDataURL() : '';
+    runeUrlCache.set(key, u);
+    return u;
+  }
+
   root.LeagueAvatars = {
     SLOTS, SKINS, HAIR_STYLES, HAIR_COLORS, TUNICS, RARITY, FRAMES, IDLE_LEN, animLength,
-    configure, computeStats, isUnlocked, progress, requirement, defaultLoadout, sanitize, toDataURL, iconURL, frameCanvas, isAnimated, nextUnlock, findItem,
+    configure, computeStats, runeCanvas, runeURL, isUnlocked, progress, requirement, defaultLoadout, sanitize, toDataURL, iconURL, frameCanvas, isAnimated, nextUnlock, findItem,
   };
 })(typeof self !== 'undefined' ? self : this);
