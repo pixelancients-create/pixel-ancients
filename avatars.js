@@ -53,6 +53,7 @@
       { id: 'mega_creeps_crown', name: 'Mega Creeps Crown', rarity: 'legendary', stat: 'longWin45', need: 1, animated: true },
       { id: 'marathon_crown', name: 'Marathon Crown', rarity: 'legendary', stat: 'bestDayWins', need: 7, animated: true },
       { id: 'team_wipe_crown', name: 'Team Wipe Crown', rarity: 'legendary', stat: 'rampages', need: 1, parsed: true, animated: true },
+      { id: 'godlike_halo', name: 'Beyond Godlike Halo', rarity: 'unique', stat: 'winStreak', need: 20, animated: true },
     ] },
     { id: 'body', name: 'Body', items: [
       { id: 'tunic', name: 'Recruit Tunic', rarity: 'starter', free: true },
@@ -89,7 +90,7 @@
       { id: 'stomp_cape', name: 'Stomp Cape', rarity: 'epic', stat: 'fastWins', need: 10 },
       { id: 'farmer_mantle', name: "Farmer's Mantle", rarity: 'epic', stat: 'totalGold', need: 500000 },
       { id: 'multikill_mantle', name: 'Multi-Kill Mantle', rarity: 'epic', stat: 'ultraKills', need: 3, parsed: true },
-      { id: 'sunfire_cape', name: 'Beyond Godlike Cape', rarity: 'legendary', stat: 'winStreak', need: 10, animated: true },
+      { id: 'sunfire_cape', name: 'Wicked Sick Cape', rarity: 'legendary', stat: 'winStreak', need: 10, animated: true },
       { id: 'defender_mantle', name: 'Ancient Defender Mantle', rarity: 'legendary', stat: 'longWins40', need: 5, animated: true },
       { id: 'perfect_week_cloak', name: 'Perfect Week Cloak', rarity: 'legendary', stat: 'bestWeekWins', need: 24, animated: true },
     ] },
@@ -140,6 +141,7 @@
       { id: 'water_waders', name: 'Water Rune Waders', rarity: 'epic', stat: 'waterRunes', need: 20, parsed: true },
       { id: 'backdoor_greaves', name: 'Backdoor Greaves', rarity: 'legendary', stat: 'towerDmg8Games', need: 3, animated: true },
       { id: 'siege_treads', name: 'Siege Treads', rarity: 'legendary', stat: 'bestTowerDamage', need: 20000, animated: true },
+      { id: 'unstoppable_treads', name: 'Unstoppable Treads', rarity: 'legendary', stat: 'winStreak', need: 15, animated: true },
     ] },
     { id: 'pet', name: 'Pet', items: [
       { id: 'none', name: 'No Pet', rarity: 'starter', free: true },
@@ -1238,6 +1240,46 @@
       [[12, 6], [14, 6], [16, 5], [18, 6], [20, 6]].forEach(([x, y], i) => P(x, y, i <= f + 1 ? (i === f + 1 ? '#ff6a4a' : '#e8302a') : '#5a0f0a'));
       P(15, 1, f === 3 ? '#ffffff' : '#ffd9cc');
     },
+  });
+  // win-streak ladder tops: 15 in a row (boots) and 20 in a row (the only Unique head item)
+  Object.assign(DRAW.head, {
+    godlike_halo: (g, f, lo) => {  // a small round golden halo with a white-gold gem, sparks twinkling around it
+      // It floats at the top of the frame. Only a shaved head leaves room for it to bob; tall styles
+      // (spiky, mohawk, buns, topknot, afro) reach the top rows, so their tips show through the ring.
+      // A dark edge where it meets hair keeps it reading as floating in front, whatever the hair colour.
+      const y = lo && lo.hair === 'shaved' && f >= 2 ? 1 : 0;
+      const hair = g.map(r => r.map(Boolean)), mine = new Set(), key = (x, yy) => yy * 64 + x;
+      const P = (x, yy, c) => { if (x < 0 || yy < 0 || x >= g[0].length || yy >= g.length) return; g[yy][x] = c; mine.add(key(x, yy)); };
+      const hole = (x, yy) => { mine.add(key(x, yy)); if (!g[yy][x]) g[yy][x] = 'rgba(0,0,0,0)'; };   // see-through middle, no outline
+      const back = '#d9a520', side = '#f5c842', front = '#ffe766', hot = '#ffffff';
+      for (let x = 13; x <= 18; x++) P(x, y, back);
+      P(12, 1 + y, back); P(19, 1 + y, back);
+      P(11, 2 + y, side); P(20, 2 + y, side);
+      P(12, 3 + y, front); P(19, 3 + y, front);
+      for (let x = 13; x <= 18; x++) P(x, 4 + y, front);
+      const sh = [13, 14, 17, 18][f]; P(sh, 4 + y, hot);                    // a soft shine sliding along the front
+      for (let x = 13; x <= 18; x++) { hole(x, 1 + y); hole(x, 3 + y); }
+      for (let x = 12; x <= 19; x++) hole(x, 2 + y);
+      const gem = ['#ffd84a', '#fff6c0', '#ffffff', '#fff6c0'];
+      P(15, 4 + y, gem[f]); P(16, 4 + y, gem[(f + 2) % 4]);
+      // sparks floating around the halo (not touching it), twinkling in turn
+      const spots = [[9, 1], [22, 3], [10, 5], [21, 0], [8, 3], [23, 1]];
+      [0, 1, 3].forEach((k, j) => { const [sx, sy] = spots[(f * 2 + k) % 6]; P(sx, sy + y, j === 0 ? hot : j === 1 ? front : side); });
+      // dark edge between the light and any hair it touches
+      const lit = [...mine].filter(k => { const yy = Math.floor(k / 64), x = k % 64; return g[yy][x] && g[yy][x] !== 'rgba(0,0,0,0)'; });
+      lit.forEach(k => { const yy = Math.floor(k / 64), x = k % 64;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const X = x + dx, Y = yy + dy;
+          if (Y >= 0 && Y < g.length && X >= 0 && X < g[0].length && hair[Y][X] && !mine.has(key(X, Y))) g[Y][X] = '#160d0a'; }); });
+    },
+  });
+  Object.assign(DRAW.boots, {
+    unstoppable_treads: (g, f, lo, feet) => boot(g, feet, { main: '#5a1a12', sole: '#1c0b08', toe: '#ffb347', shaft: 3, cuff: '#ff7a3d',
+      extra: (P, { x, y, lx }, i) => {
+        P(lx + 1, y - 2, '#ffb347'); P(x + 1, y, '#8a2a18'); P(x + 2, y, '#8a2a18');
+        // fire trail off the heel: three flickering pixels
+        const back = i === 0 ? x - 1 : x + 4, dir = i === 0 ? -1 : 1, ph = (f + i) % 4;
+        P(back, y + 1, ph % 2 ? '#ffe08a' : '#ff9a3d'); P(back + dir, y + (ph < 2 ? 1 : 0), '#ff5a2a'); if (ph !== 3) P(back + dir * 2, y, '#c23c2a');
+      } }, f),
   });
   Object.assign(DRAW.body, {
     punching_bag_plate: g => {     // dented, patched-up leather plate

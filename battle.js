@@ -41,6 +41,7 @@
     kill_cap: { a: 'greed', p: 4 },
     xp_visor: { a: 'execute', p: 45 },
     signature_helm: { a: 'silence', p: 1 },
+    godlike_halo: { a: 'beyondGodlike', p: 5 },
     marathon_crown: { a: 'enrage', p: 45 },
     team_wipe_crown: { a: 'wipe', p: 30 },
     // body
@@ -122,6 +123,7 @@
     deny_dancer: { a: 'counter', p: 25 },
     water_waders: { a: 'water', p: 30 },
     siege_treads: { a: 'siege', p: 50 },
+    unstoppable_treads: { a: 'unstoppable', p: 4 },
     // pets (the pet attacks after its owner)
     lucky_cat: { a: 'bounty', p: 40 },
     lane_frog: {},
@@ -230,6 +232,8 @@
     arcane: p => `Every 4th attack is magic (ignores most armor) and deals +${p}%`,
     frenzy: p => `Each kill brings its next turn ${p}% sooner`,
     spellShield: p => `Shrugs off the first ${p} stuns, hexes or silences. Magic hurts it 25% less`,
+    beyondGodlike: p => `Beyond Godlike: can never be stunned, hexed or silenced. +${p}% attack and HP`,
+    unstoppable: p => `+1 speed and can't be slowed. Each knockout it lands gives +1 more speed (up to +${p})`,
     urn: p => `Whenever anyone falls, heals the weakest ally ${p} HP`,
     vision: p => `Enemies lose ${p}% dodge`,
     glimmer: p => `Every 4th turn cloaks the weakest ally: it dodges the next hit and heals ${p} HP`,
@@ -320,6 +324,8 @@
       if (u.ab.taunt) u.ab.shield = (u.ab.shield || 0) + 100;
       if (u.ab.evasion) u.eva += u.ab.evasion;
       if (u.ab.critMaster) { u.crit += u.ab.critMaster; u.critMul = 2.6; }
+      if (u.ab.beyondGodlike) { const f = 1 + u.ab.beyondGodlike / 100; u.maxHp *= f; u.atk *= f; }
+      if (u.ab.unstoppable) u.spd += 1;
       if (u.ab.flex) { const f = 1 + u.ab.flex / 100; u.maxHp *= f; u.atk *= f; u.armor *= f; u.spd *= f; }
     }
     u.maxHp = Math.round(u.maxHp);
@@ -402,7 +408,7 @@
         if (t.underdog) { u.maxHp = Math.round(u.maxHp * (1 + t.underdog / 100)); u.hp = u.maxHp; }
         u.shield = (u.ab.shield || 0) + fx.shield;
         u.gauge = R() * 30 + (u.ab.tp ? 60 : 0);
-        Object.assign(u, { actions: 0, kills: 0, stacksAtk: 0, flatAtk: 0, slow: 0, stun: 0, dots: [], dodged: 0, revived: false, lowHealed: false,
+        Object.assign(u, { killSpd: 0, actions: 0, kills: 0, stacksAtk: 0, flatAtk: 0, slow: 0, stun: 0, dots: [], dodged: 0, revived: false, lowHealed: false,
           dealt: 0, healed: 0, taken: 0, spdBonus: 0, farmAtk: 0, evaDebuff: 0, silenced: 0, resist: u.ab.spellShield || 0, hardened: false, drank: false, glim: false, bondIn: [] });
       });
     }
@@ -429,7 +435,7 @@
       return (u.atk + u.flatAtk + u.farmAtk) * (1 + pct / 100);
     };
     const armorOf = u => u.armor + teamOf(u).fx.armor + (early() ? teamOf(u).fx.rally : 0) + (u.ab.lastStand && u.hp < u.maxHp * 0.3 ? u.ab.lastStand : 0);
-    const spdOf = u => Math.max(u.spd * 0.5, u.spd + teamOf(u).fx.spd + u.spdBonus - u.slow);
+    const spdOf = u => Math.max(u.spd * 0.5, u.spd + teamOf(u).fx.spd + u.spdBonus - (u.ab.unstoppable ? 0 : u.slow));
     const evaOf = u => Math.max(0, Math.min(45, u.eva + teamOf(u).fx.eva) - enemiesOf(u).fx.vision - u.evaDebuff);
     const critOf = u => u.crit + teamOf(u).fx.crit;
 
@@ -445,6 +451,7 @@
     // stun break: after a stun or hex, a fighter can't be stunned again until it has had one free turn
     function stunT(t, kind) {
       if (t.actions < (t.stunGuard || 0)) return false;
+      if (t.ab.beyondGodlike) { log({ k: 'cast', u: t.key, a: 'resist' }); return false; }
       if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); return false; }
       if (kind === 'hex') t.stun = Math.max(t.stun, 1); else { t.stun = 1; log({ k: 'stun', t: t.key }); }
       t.stunGuard = t.actions + 2;
@@ -477,6 +484,7 @@
         if (src.ab.greed) src.flatAtk += src.ab.greed;
         if (src.ab.rampage) src.stacksAtk += src.ab.rampage;
         if (src.ab.momentum) src.spdBonus += src.ab.momentum;
+        if (src.ab.unstoppable && (src.killSpd || 0) < src.ab.unstoppable) { src.spdBonus += 1; src.killSpd = (src.killSpd || 0) + 1; }
         if (src.ab.frenzy) src.gauge += src.ab.frenzy;
         if (src.ab.wipe && !src.wiping && !pending.includes(src)) pending.push(src);
         if (src.pet && src.pet.a === 'bounty') heal(src, src.pet.p, src);
@@ -602,7 +610,7 @@
         if (pool.length) {
           const t = pool.reduce((a, b) => (b.power > a.power ? b : a));
           log({ k: 'cast', u: u.key, a: 'silence', t: t.key });
-          if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); } else t.silenced = 1;
+          if (t.ab.beyondGodlike) log({ k: 'cast', u: t.key, a: 'resist' }); else if (t.resist > 0) { t.resist--; log({ k: 'cast', u: t.key, a: 'resist' }); } else t.silenced = 1;
         }
       }
       if (u.ab.glimmer && u.actions % 4 === 0 && can()) { const t = weakestAlly(u); t.glim = true; log({ k: 'cast', u: u.key, a: 'glimmer', t: t.key }); heal(t, u.ab.glimmer, u); }
