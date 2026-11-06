@@ -53,7 +53,7 @@
       { id: 'mega_creeps_crown', name: 'Mega Creeps Crown', rarity: 'legendary', stat: 'longWin45', need: 1, animated: true },
       { id: 'marathon_crown', name: 'Marathon Crown', rarity: 'legendary', stat: 'bestDayWins', need: 7, animated: true },
       { id: 'team_wipe_crown', name: 'Team Wipe Crown', rarity: 'legendary', stat: 'rampages', need: 1, parsed: true, animated: true },
-      { id: 'godlike_halo', name: 'Beyond Godlike Halo', rarity: 'unique', stat: 'winStreak', need: 20, animated: true },
+      { id: 'godlike_halo', name: 'Beyond Godlike Halo', rarity: 'unique', stat: 'winStreak', need: 20, animated: true, iconScale: 2 },
     ] },
     { id: 'body', name: 'Body', items: [
       { id: 'tunic', name: 'Recruit Tunic', rarity: 'starter', free: true },
@@ -1264,7 +1264,7 @@
       P(15, 4 + y, gem[f]); P(16, 4 + y, gem[(f + 2) % 4]);
       // sparks floating around the halo (not touching it), twinkling in turn
       const spots = [[9, 1], [22, 3], [10, 5], [21, 0], [8, 3], [23, 1]];
-      [0, 1, 3].forEach((k, j) => { const [sx, sy] = spots[(f * 2 + k) % 6]; P(sx, sy + y, j === 0 ? hot : j === 1 ? front : side); });
+      if (!(lo && lo.icon)) [0, 1, 3].forEach((k, j) => { const [sx, sy] = spots[(f * 2 + k) % 6]; P(sx, sy + y, j === 0 ? hot : j === 1 ? front : side); });
       // dark edge between the light and any hair it touches
       const lit = [...mine].filter(k => { const yy = Math.floor(k / 64), x = k % 64; return g[yy][x] && g[yy][x] !== 'rgba(0,0,0,0)'; });
       lit.forEach(k => { const yy = Math.floor(k / 64), x = k % 64;
@@ -1700,7 +1700,7 @@
   function drawIcon(slot, id, f = 0, lo) {
     const g = grid();
     const fn = DRAW[slot] && DRAW[slot][id];
-    if (fn) fn(g, f, lo || { tunic: 0 });
+    if (fn) fn(g, f, { ...(lo || { tunic: 0 }), icon: true });   // icon: items may leave out loose bits (sparks) so the icon stays big
     let x0 = SIZE, y0 = SIZE, x1 = -1, y1 = -1;
     for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (g[y][x]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
     if (x1 < 0) return null;
@@ -1756,7 +1756,7 @@
     const ic = drawIcon(slot, id, f, lo);
     if (!ic) { cache.set(key, null); return null; }
     // scale the item up by whole pixels so it fills a square icon, then centre it
-    const scale = Math.max(1, Math.min(4, Math.floor(30 / Math.max(ic.w, ic.h))));
+    const scale = (it && it.iconScale) || Math.max(1, Math.min(4, Math.floor(30 / Math.max(ic.w, ic.h))));   // iconScale: keep a wide item big
     const pw = ic.w * scale, ph = ic.h * scale, size = Math.max(32, pw + 2, ph + 2);
     const url = paint([{ g: ic.g, x0: ic.x0, y0: ic.y0, gw: ic.w, gh: ic.h }], scale, size, size, Math.floor((size - pw) / 2), Math.floor((size - ph) / 2));
     cache.set(key, url);
