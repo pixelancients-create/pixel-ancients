@@ -314,11 +314,11 @@
       const wkDays = new Map(), wkHeroes = new Map(), wkGames = new Map(), heroGames = new Map();
       const addTo = (map, key, val) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(val); };
       const inc = (map, key) => map.set(key, (map.get(key) || 0) + 1);
-      let run = 0, lossRun = 0;
+      let run = 0, lossRun = 0, comeback = 0, armed = false;   // comeback: wins in a row right after 3+ losses in a row
       const dayGames = new Map(), dayWins = new Map(), wkWins = new Map(), heroWins = new Map(), heroesWon = new Set();
       for (const e of scored[m.id] || []) {
         if (!e.counted || e.start_time < start || e.start_time >= until) continue;
-        if (e.result === 'abandon') { run = 0; continue; }
+        if (e.result === 'abandon') { run = 0; armed = false; comeback = 0; continue; }
         const local = new Date((e.start_time + tz * 3600) * 1000);
         const hour = local.getUTCHours(), dow = local.getUTCDay();
         heroes.add(e.hero_id); days.add(S.localDay(e.start_time, tz)); weeksPlayed.add(S.weekStartDay(e.start_time, tz));
@@ -348,10 +348,11 @@
           if (e.deaths === 0) s.deathlessWins++;
           if (dow === 0 || dow === 6) s.weekendWins++;
           if (e.tags.includes('Stack')) s.stackWins++;
-          if (lossRun >= 3) s.comebackWins++;
           if (mins < 18) s.fastWins++;
           if (mins >= 35) s.longWins35++; if (mins >= 40) s.longWins40++; if (mins >= 45) s.longWin45++;
         }
+        if (won) { if (lossRun >= 3) { armed = true; comeback = 0; } if (armed) { comeback++; s.comebackWins = Math.max(s.comebackWins, comeback); } }
+        else { armed = false; comeback = 0; }
         lossRun = won ? 0 : lossRun + 1;
         s.lossStreak = Math.max(s.lossStreak, lossRun);
         const day = S.localDay(e.start_time, tz), party = partyAt(e, now);
