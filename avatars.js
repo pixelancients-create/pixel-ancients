@@ -283,6 +283,11 @@
   // Stats as of `now`: only games played before then count, so past weeks can be replayed for "new gear" detection.
   // parsed: replay stats from data.json, { [matchId]: { t: when they were read, p: { [accountId]: {...} } } }.
   // Only replay stats read before `now` count, so a past Fight Night never changes when a late parse arrives.
+  // Games over the daily/weekly cap count toward gear from this moment on (Sun 8 Nov 2026, 3pm MYT), for the whole season.
+  // Stats worked out for an earlier moment (Saturday's Fight Night snapshot) leave them out, so that night's replay never changes.
+  const CAP_GEAR_SINCE = Date.UTC(2026, 10, 8, 7, 0, 0) / 1000;
+  const gearGame = (e, now) => e.counted || (e.capped && now >= CAP_GEAR_SINCE);
+
   function computeStats(members, allScored, elo, cfg, now, parsed) {
     const S = root.LeagueScoring, tz = cfg.timezoneOffsetHours;
     const scored = {};
@@ -316,8 +321,9 @@
       const inc = (map, key) => map.set(key, (map.get(key) || 0) + 1);
       let run = 0, lossRun = 0, comeback = 0, armed = false;   // comeback: wins in a row right after 3+ losses in a row
       const dayGames = new Map(), dayWins = new Map(), wkWins = new Map(), heroWins = new Map(), heroesWon = new Set();
+      // gear counts every game that scores plus games over the daily/weekly cap (capped); points stay capped
       for (const e of scored[m.id] || []) {
-        if (!e.counted || e.start_time < start || e.start_time >= until) continue;
+        if (!gearGame(e, now) || e.start_time < start || e.start_time >= until) continue;
         if (e.result === 'abandon') { run = 0; armed = false; comeback = 0; continue; }
         const local = new Date((e.start_time + tz * 3600) * 1000);
         const hour = local.getUTCHours(), dow = local.getUTCDay();
@@ -396,9 +402,9 @@
       for (const w of weeks) { if (weeksPlayed.has(w)) { streak++; s.weekStreak = Math.max(s.weekStreak, streak); } else if (w < curWeek) streak = 0; }
     }
     for (const m of members) for (const e of scored[m.id] || []) {
-      if (!e.counted || e.start_time < start || e.start_time >= until) continue;
+      if (!gearGame(e, now) || e.start_time < start || e.start_time >= until) continue;
       const s = stats[m.id];
-      s.seasonPoints += pointsAt(e, now);
+      if (e.counted) s.seasonPoints += pointsAt(e, now);
       if (e.result === 'win' || e.result === 'loss') { s.games++; if (e.mode === 'allpick') s.allpickGames++; }
       if (e.result === 'win') { s.wins++; if (e.mode === 'turbo') s.turboWins++; else s.allpickWins++; }
       if (e.tags.includes('Stack')) s.stacks++;

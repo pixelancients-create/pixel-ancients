@@ -112,12 +112,13 @@
         e.result = win ? 'win' : 'loss';
         const day = localDay(m.start_time, tz), wk = weekStartDay(m.start_time, tz), w = weightOf(mode, s);
         e.weight = w;
-        if ((perDay.get(day) || 0) + w > s.dailyCap) { e.counted = false; e.tags.push('Over daily cap'); entries.push(e); continue; }
-        if (s.weeklyCap && (perWeek.get(wk) || 0) + w > s.weeklyCap) { e.counted = false; e.tags.push('Over weekly cap'); entries.push(e); continue; }
+        if (kdaOf(e.kills, e.deaths, e.assists) >= s.kdaThreshold) e.tags.push('KDA');   // gear stat only, no points
+        // over a cap: no points, but the game still counts toward gear (capped: true)
+        if ((perDay.get(day) || 0) + w > s.dailyCap) { e.counted = false; e.capped = true; e.tags.push('Over daily cap (gear only)'); entries.push(e); continue; }
+        if (s.weeklyCap && (perWeek.get(wk) || 0) + w > s.weeklyCap) { e.counted = false; e.capped = true; e.tags.push('Over weekly cap (gear only)'); entries.push(e); continue; }
         perDay.set(day, (perDay.get(day) || 0) + w); perWeek.set(wk, (perWeek.get(wk) || 0) + w);
         e.points = (win ? s.partyWin[party] : s.loss) * w;
         e.points0 = (win ? s.partyWin[party0] : s.loss) * w;                          // points before the parse arrived
-        if (kdaOf(e.kills, e.deaths, e.assists) >= s.kdaThreshold) e.tags.push('KDA');   // gear stat only, no points
         entries.push(e);
       }
       out[p.id] = entries;
